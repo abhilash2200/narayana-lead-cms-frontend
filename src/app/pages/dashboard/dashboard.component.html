@@ -1,0 +1,965 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <!-- SIDEBAR -->
+  <app-sidebar></app-sidebar>
+
+  <!-- MAIN -->
+  <main class="lg:ml-[230px]">
+    <!-- TOPBAR -->
+    <app-topbar title="Ads Management & CRM Analytics" subtitle="Real-time Lead Inflow, Quality Breakdown & Campaign Attribution"></app-topbar>
+
+    <!-- CONTENT WRAPPER -->
+    <div class="w-full p-3.5 sm:p-5 space-y-4">
+
+      <!-- ======================================================== -->
+      <!-- 1. ADS COMMAND & CONTROL HEADER                          -->
+      <!-- ======================================================== -->
+      <section class="relative z-20 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+        
+        <!-- ROW 1: HEADER & DATA SOURCE (MODULE) SWITCHER -->
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 pb-4">
+          
+          <!-- Title & Live Status -->
+          <div class="flex items-center gap-3.5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-600 to-[#7158e2] text-white shadow-xs">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                  Ads Performance & Quality Dashboard
+                </h1>
+                <button type="button" (click)="toggleDemoMode()"
+                  [class.bg-purple-50]="isDemoMode"
+                  [class.border-purple-200]="isDemoMode"
+                  [class.text-purple-700]="isDemoMode"
+                  [class.bg-emerald-50]="!isDemoMode"
+                  [class.border-emerald-200]="!isDemoMode"
+                  [class.text-emerald-700]="!isDemoMode"
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border transition hover:opacity-85 shadow-2xs cursor-pointer"
+                  [title]="isDemoMode ? 'Showing rich dummy data. Click to switch to Live API feed.' : 'Showing live API data. Click to switch to Demo data preview.'">
+                  @if (isDemoMode) {
+                    <span class="h-1.5 w-1.5 rounded-full bg-purple-600"></span>
+                    <span>Demo Analytics (Dummy Data)</span>
+                  } @else {
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live API Feed</span>
+                  }
+                </button>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ todayFormattedDate }} • Active Lead Inflow Monitoring
+              </p>
+            </div>
+          </div>
+
+          <!-- Module Selector & Quick Actions -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            
+            <!-- MODULE / DATA SOURCE SWITCHER -->
+            <div class="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 px-3 py-1.5 shadow-2xs">
+              <label for="module-select" class="text-xs font-bold text-indigo-900 whitespace-nowrap flex items-center gap-1">
+                <svg class="h-3.5 w-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Data Source:
+              </label>
+
+              <select id="module-select" [(ngModel)]="filterState.selectedModuleKey" (ngModelChange)="onModuleChange()"
+                [disabled]="isLoadingModules"
+                class="h-8 rounded-lg border border-indigo-200 bg-white pl-2.5 pr-7 text-xs font-bold text-indigo-950 shadow-2xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 cursor-pointer">
+                @for (mod of modules; track mod.key) {
+                  <option [value]="mod.key">{{ mod.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Manage in Leads Table -->
+            <button type="button" (click)="navigateToLeads()"
+              class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900">
+              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>Open in Leads List</span>
+            </button>
+
+            <!-- Export CSV -->
+            <button type="button" (click)="exportSummary()" title="Export Filtered Leads as CSV"
+              class="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900">
+              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Export CSV</span>
+            </button>
+
+          </div>
+
+        </div>
+
+        <!-- ROW 2: FILTERS (DATE PRESETS, DATE RANGE, COURSE, HYGIENE TOGGLES) -->
+        <div class="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          
+          <!-- LEFT: Timeframe Presets & Custom Date Picker -->
+          <div class="flex flex-wrap items-center gap-2">
+            
+            <!-- Preset Buttons -->
+            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-2xs">
+              <button type="button" (click)="setTimeframe('today')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.timeframe === 'today'"
+                [class.text-indigo-600]="filterState.timeframe === 'today'"
+                [class.shadow-2xs]="filterState.timeframe === 'today'"
+                [class.text-slate-600]="filterState.timeframe !== 'today'">
+                Today
+              </button>
+              <button type="button" (click)="setTimeframe('yesterday')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.timeframe === 'yesterday'"
+                [class.text-indigo-600]="filterState.timeframe === 'yesterday'"
+                [class.shadow-2xs]="filterState.timeframe === 'yesterday'"
+                [class.text-slate-600]="filterState.timeframe !== 'yesterday'">
+                Yesterday
+              </button>
+              <button type="button" (click)="setTimeframe('7d')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.timeframe === '7d'"
+                [class.text-indigo-600]="filterState.timeframe === '7d'"
+                [class.shadow-2xs]="filterState.timeframe === '7d'"
+                [class.text-slate-600]="filterState.timeframe !== '7d'">
+                7D
+              </button>
+              <button type="button" (click)="setTimeframe('30d')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.timeframe === '30d'"
+                [class.text-indigo-600]="filterState.timeframe === '30d'"
+                [class.shadow-2xs]="filterState.timeframe === '30d'"
+                [class.text-slate-600]="filterState.timeframe !== '30d'">
+                30D
+              </button>
+              <button type="button" (click)="setTimeframe('this_month')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.timeframe === 'this_month'"
+                [class.text-indigo-600]="filterState.timeframe === 'this_month'"
+                [class.shadow-2xs]="filterState.timeframe === 'this_month'"
+                [class.text-slate-600]="filterState.timeframe !== 'this_month'">
+                This Month
+              </button>
+            </div>
+
+            <!-- Custom Calendar Picker -->
+            <div class="relative z-30">
+              <app-date-range-picker
+                [startDate]="filterState.dateFrom"
+                [endDate]="filterState.dateTo"
+                placeholder="Custom date range..."
+                (rangeChange)="onCustomDateRangeChange($event)" />
+            </div>
+
+          </div>
+
+          <!-- RIGHT: Course Filter & Hygiene Controls -->
+          <div class="flex flex-wrap items-center gap-2.5">
+
+            <!-- COURSE-WISE FILTER (Requirement #3) -->
+            <div class="flex items-center gap-1.5">
+              <label for="course-filter" class="text-xs font-semibold text-slate-500 whitespace-nowrap">
+                Course:
+              </label>
+              <select id="course-filter" [(ngModel)]="filterState.selectedCourse" (ngModelChange)="onCourseFilterChange($event)"
+                class="h-9 min-w-[140px] rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 shadow-2xs outline-none transition focus:border-indigo-500 cursor-pointer">
+                <option value="">All Courses / Classes</option>
+                @for (c of calculationResult?.availableCourses || []; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- TEST LEADS FILTER TOGGLE (Requirement #4) -->
+            <button type="button" (click)="toggleExcludeTest()"
+              class="inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition shadow-2xs"
+              [class.border-emerald-200]="filterState.excludeTest"
+              [class.bg-emerald-50]="filterState.excludeTest"
+              [class.text-emerald-800]="filterState.excludeTest"
+              [class.border-slate-200]="!filterState.excludeTest"
+              [class.bg-white]="!filterState.excludeTest"
+              [class.text-slate-600]="!filterState.excludeTest"
+              title="Toggle to include or remove test/dummy leads from all calculations">
+              <span class="h-2 w-2 rounded-full" [class.bg-emerald-500]="filterState.excludeTest" [class.bg-slate-300]="!filterState.excludeTest"></span>
+              <span>{{ filterState.excludeTest ? 'Test Leads Hidden' : 'Test Leads Included' }}</span>
+            </button>
+
+            <!-- DUPLICATE LEADS FILTER TOGGLE (Requirement #5) -->
+            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-2xs" title="Filter unique prospects vs tracking duplicate submissions">
+              <button type="button" (click)="setDuplicateMode('unique_only')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.duplicateMode === 'unique_only'"
+                [class.text-indigo-600]="filterState.duplicateMode === 'unique_only'"
+                [class.shadow-2xs]="filterState.duplicateMode === 'unique_only'"
+                [class.text-slate-600]="filterState.duplicateMode !== 'unique_only'">
+                Unique Only
+              </button>
+              <button type="button" (click)="setDuplicateMode('all')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.duplicateMode === 'all'"
+                [class.text-indigo-600]="filterState.duplicateMode === 'all'"
+                [class.shadow-2xs]="filterState.duplicateMode === 'all'"
+                [class.text-slate-600]="filterState.duplicateMode !== 'all'">
+                All Leads
+              </button>
+              <button type="button" (click)="setDuplicateMode('duplicates_only')"
+                class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
+                [class.bg-white]="filterState.duplicateMode === 'duplicates_only'"
+                [class.text-amber-700]="filterState.duplicateMode === 'duplicates_only'"
+                [class.shadow-2xs]="filterState.duplicateMode === 'duplicates_only'"
+                [class.text-slate-600]="filterState.duplicateMode !== 'duplicates_only'">
+                Duplicates
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ERROR BANNER -->
+      @if (loadError) {
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 flex items-center justify-between">
+        <span>{{ loadError }}</span>
+        <button type="button" (click)="fetchLeadsForModule()" class="underline hover:text-red-900 font-bold">Retry</button>
+      </div>
+      }
+
+      <!-- ======================================================== -->
+      <!-- 2. REPORTING MODE TOGGLE (TOTAL vs DAILY AVERAGE)        -->
+      <!-- ======================================================== -->
+      <section class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-indigo-100 bg-linear-to-r from-indigo-50/80 via-white to-purple-50/60 p-3 sm:px-4 shadow-2xs">
+        
+        <div class="flex items-center gap-2.5">
+          <span class="text-xs font-bold text-slate-800">
+            Reporting View:
+          </span>
+          <div class="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-2xs">
+            <button type="button" (click)="setReportMode('total')"
+              class="flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-extrabold transition"
+              [class.bg-indigo-600]="filterState.reportMode === 'total'"
+              [class.text-white]="filterState.reportMode === 'total'"
+              [class.text-slate-600]="filterState.reportMode !== 'total'">
+              <span>📊 Total Data Report</span>
+            </button>
+            <button type="button" (click)="setReportMode('average')"
+              class="flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-extrabold transition"
+              [class.bg-indigo-600]="filterState.reportMode === 'average'"
+              [class.text-white]="filterState.reportMode === 'average'"
+              [class.text-slate-600]="filterState.reportMode !== 'average'">
+              <span>📈 Daily Average Report</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500 font-medium">
+          @if (filterState.reportMode === 'total') {
+            <span>Showing cumulative counts for the selected period ({{ filterState.dateFrom }} to {{ filterState.dateTo }}).</span>
+          } @else {
+            <span>Showing normalized per-day averages across <strong>{{ calculationResult?.metrics?.calendarDaysCount ?? 1 }} calendar days</strong>.</span>
+          }
+        </div>
+
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- 3. TODAY'S LEAD QUALITY PULSE (Requirement #1)           -->
+      <!-- ======================================================== -->
+      @if (calculationResult?.todayPulse; as today) {
+      <section class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
+        
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          
+          <!-- Left: Big Number & Comparison -->
+          <div class="flex items-center gap-4 min-w-[200px]">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Today's Inflow
+              </span>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span class="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                  {{ formatNumber(today.totalToday) }}
+                </span>
+                <span class="text-xs font-bold text-slate-500">
+                  Leads Today
+                </span>
+              </div>
+              <div class="mt-1 flex items-center gap-1.5 text-xs font-semibold">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                  [class.bg-emerald-50]="today.isPositiveTrend"
+                  [class.text-emerald-700]="today.isPositiveTrend"
+                  [class.bg-rose-50]="!today.isPositiveTrend"
+                  [class.text-rose-700]="!today.isPositiveTrend">
+                  {{ today.vsYesterdayPercent }}
+                </span>
+                <span class="text-slate-400 text-[11px]">vs yesterday ({{ today.vsYesterdayTotal }} leads)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center/Right: Quality Breakdown Tiles -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 flex-1">
+            
+            <!-- Verified -->
+            <div class="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 text-center">
+              <span class="block text-[11px] font-bold text-emerald-800">OTP Verified</span>
+              <span class="text-lg sm:text-xl font-extrabold text-emerald-700 mt-0.5 block">
+                {{ today.verifiedToday }}
+              </span>
+              <span class="text-[11px] font-bold text-emerald-600">
+                {{ today.verifiedRateToday }}% of today
+              </span>
+            </div>
+
+            <!-- OTP Pending -->
+            <div class="rounded-xl border border-amber-100 bg-amber-50/40 p-3 text-center">
+              <span class="block text-[11px] font-bold text-amber-800">OTP Pending</span>
+              <span class="text-lg sm:text-xl font-extrabold text-amber-700 mt-0.5 block">
+                {{ today.pendingToday }}
+              </span>
+              <span class="text-[11px] font-bold text-amber-600">
+                {{ today.pendingRateToday }}% of today
+              </span>
+            </div>
+
+            <!-- Duplicate Inquiries -->
+            <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 text-center">
+              <span class="block text-[11px] font-bold text-indigo-800">Duplicates</span>
+              <span class="text-lg sm:text-xl font-extrabold text-indigo-700 mt-0.5 block">
+                {{ today.duplicateToday }}
+              </span>
+              <span class="text-[11px] font-bold text-indigo-600">
+                {{ today.duplicateRateToday }}% of today
+              </span>
+            </div>
+
+            <!-- Test Leads Filtered -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
+              <span class="block text-[11px] font-bold text-slate-700">Test / Junk</span>
+              <span class="text-lg sm:text-xl font-extrabold text-slate-700 mt-0.5 block">
+                {{ today.testToday }}
+              </span>
+              <span class="text-[11px] font-bold text-slate-500">
+                {{ today.testRateToday }}% filtered
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Stacked Proportional Bar -->
+        <div class="mt-4 pt-3.5 border-t border-slate-100">
+          <div class="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1.5">
+            <span>Today's Lead Quality Distribution</span>
+            <span>Total Genuine Today: {{ today.totalToday }}</span>
+          </div>
+          <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div class="bg-emerald-500 transition-all duration-300" [style.width.%]="today.verifiedRateToday" title="Verified OTP"></div>
+            <div class="bg-amber-400 transition-all duration-300" [style.width.%]="today.pendingRateToday" title="Pending OTP"></div>
+            <div class="bg-indigo-400 transition-all duration-300" [style.width.%]="today.duplicateRateToday" title="Duplicates"></div>
+          </div>
+        </div>
+
+      </section>
+      }
+
+      <!-- ======================================================== -->
+      <!-- 4. PRIMARY KPI METRICS GRID (TOTAL vs AVERAGE)           -->
+      <!-- ======================================================== -->
+      @if (calculationResult?.metrics; as m) {
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 sm:gap-4">
+        
+        <!-- CARD 1: VOLUME -->
+        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {{ filterState.reportMode === 'total' ? 'Total Inflow' : 'Daily Average Inflow' }}
+            </span>
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              {{ filterState.reportMode === 'total' ? formatNumber(m.totalLeads) : m.avgLeadsPerDay }}
+            </span>
+            <span class="text-xs font-semibold text-slate-500 ml-1">
+              {{ filterState.reportMode === 'total' ? 'Leads' : 'Leads / day' }}
+            </span>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            Across {{ m.calendarDaysCount }} calendar days ({{ m.activeDaysCount }} active days)
+          </p>
+        </div>
+
+        <!-- CARD 2: VERIFIED QUALITY -->
+        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {{ filterState.reportMode === 'total' ? 'OTP Verified' : 'Daily Verified Average' }}
+            </span>
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span class="text-2xl sm:text-3xl font-extrabold text-emerald-600">
+              {{ filterState.reportMode === 'total' ? formatNumber(m.otpVerifiedCount) : m.avgOtpVerifiedPerDay }}
+            </span>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+              {{ m.otpVerifiedRate }}%
+            </span>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            High intent genuine prospects with verified phone
+          </p>
+        </div>
+
+        <!-- CARD 3: UNIQUE vs DUPLICATE -->
+        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {{ filterState.reportMode === 'total' ? 'Unique Prospects' : 'Daily Unique Average' }}
+            </span>
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span class="text-2xl sm:text-3xl font-extrabold text-blue-600">
+              {{ filterState.reportMode === 'total' ? formatNumber(m.uniqueCount) : m.avgUniquePerDay }}
+            </span>
+            <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+              {{ m.uniqueRate }}%
+            </span>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            Duplicate Rate: {{ m.duplicateRate }}% ({{ m.duplicateCount }} repeat entries)
+          </p>
+        </div>
+
+        <!-- CARD 4: PENDING & HYGIENE -->
+        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {{ filterState.reportMode === 'total' ? 'Unverified / Pending' : 'Daily Pending Average' }}
+            </span>
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span class="text-2xl sm:text-3xl font-extrabold text-amber-600">
+              {{ filterState.reportMode === 'total' ? formatNumber(m.otpPendingCount) : m.avgOtpPendingPerDay }}
+            </span>
+            <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+              {{ m.otpPendingRate }}%
+            </span>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            {{ m.testCount }} test/dummy submissions kept aside
+          </p>
+        </div>
+
+      </section>
+      }
+
+      <!-- ======================================================== -->
+      <!-- 5. ANALYTICS & BREAKDOWNS (2-COLUMN GRID)                -->
+      <!-- ======================================================== -->
+      <section class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        
+        <!-- LEFT COLUMN: Trend Chart & Course Breakdown (8 COLS) -->
+        <div class="space-y-4 xl:col-span-8 min-w-0">
+          
+          <!-- DAILY PACING TREND CHART -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">
+                  Daily Lead Inflow & Pacing Trend
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Day-by-day lead volume across the active date range
+                </p>
+              </div>
+
+              <!-- Legend -->
+              <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-600">
+                <span class="flex items-center gap-1">
+                  <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Verified
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span> Pending
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="h-2.5 w-2.5 rounded-full bg-indigo-400"></span> Duplicate
+                </span>
+              </div>
+            </div>
+
+            <!-- Bar Chart Display -->
+            @if (calculationResult?.dailyTrend && calculationResult!.dailyTrend.length > 0) {
+            <div class="relative pt-2 pb-2">
+              <div class="flex items-end justify-between gap-1.5 h-48 border-b border-slate-100 px-1 pt-12 overflow-x-auto">
+                @for (d of calculationResult!.dailyTrend; track d.date) {
+                <div class="flex-1 min-w-[28px] max-w-[48px] flex flex-col items-center gap-1 group relative">
+                  
+                  <!-- Tooltip -->
+                  <div class="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+                    <div class="rounded-md bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+                      {{ d.date }}: {{ d.total }} leads ({{ d.verified }} verified)
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-1"></div>
+                  </div>
+
+                  <!-- Stacked Bar -->
+                  <div class="w-full rounded-t-md overflow-hidden bg-slate-100 flex flex-col justify-end transition-all duration-300 hover:brightness-105"
+                    [style.height.%]="d.heightPercent">
+                    <div class="bg-indigo-400 w-full" [style.height.%]="d.total > 0 ? (d.duplicate / d.total) * 100 : 0"></div>
+                    <div class="bg-amber-400 w-full" [style.height.%]="d.total > 0 ? (d.pending / d.total) * 100 : 0"></div>
+                    <div class="bg-emerald-500 w-full flex-1 min-h-[4px]"></div>
+                  </div>
+
+                  <!-- Date Label -->
+                  <span class="text-[10px] font-semibold text-slate-400 truncate w-full text-center">
+                    {{ d.dayLabel }}
+                  </span>
+                </div>
+                }
+              </div>
+            </div>
+            } @else {
+            <div class="py-12 text-center text-xs text-slate-400">
+              No daily inflow records in the selected range.
+            </div>
+            }
+          </div>
+
+          <!-- COURSE-WISE LEAD ANALYSIS TABLE (Requirement #3) -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3.5">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">
+                  Course & Class Quality Matrix
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Breakdown by program with total volume, daily run-rate, and verification rates
+                </p>
+              </div>
+              <span class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-100">
+                {{ calculationResult?.courseBreakdown?.length ?? 0 }} Programs Active
+              </span>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-2.5 pl-2">Course / Class</th>
+                    <th class="py-2.5 px-3 text-right">
+                      {{ filterState.reportMode === 'total' ? 'Total Leads' : 'Avg / Day' }}
+                    </th>
+                    <th class="py-2.5 px-3 text-right">Verified Rate</th>
+                    <th class="py-2.5 px-3 text-right">Duplicate Rate</th>
+                    <th class="py-2.5 pr-2 text-right">Inflow Share</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (c of calculationResult?.courseBreakdown || []; track c.courseName) {
+                  <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-2.5 pl-2 font-bold text-slate-800">
+                      {{ c.courseName }}
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">
+                      {{ filterState.reportMode === 'total' ? formatNumber(c.totalLeads) : c.avgLeadsPerDay }}
+                    </td>
+                    <td class="py-2.5 px-3 text-right">
+                      <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold"
+                        [class.bg-emerald-50]="c.verifiedRate >= 70"
+                        [class.text-emerald-700]="c.verifiedRate >= 70"
+                        [class.bg-amber-50]="c.verifiedRate < 70"
+                        [class.text-amber-700]="c.verifiedRate < 70">
+                        {{ c.verifiedRate }}%
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">
+                      {{ c.duplicateRate }}%
+                    </td>
+                    <td class="py-2.5 pr-2 text-right font-bold text-slate-500">
+                      {{ c.sharePercent }}%
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-xs text-slate-400">
+                      No course records match your current filters.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- HOURLY DAYPARTING & PEAK INFLOW HEATMAP -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900">
+                    Hourly Inflow & Dayparting Heatmap
+                  </h3>
+                  <span class="rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+                    Ad Scheduling Intelligence
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Submission concentration across 24 hours (helps optimize Google & Meta ad budget dayparting)
+                </p>
+              </div>
+              <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+                <span class="flex items-center gap-1">
+                  <span class="h-2 w-2 rounded-full bg-indigo-600"></span> Volume
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Verified Rate
+                </span>
+              </div>
+            </div>
+
+            <!-- 24-Hour Bar Visualizer -->
+            <div class="overflow-x-auto pb-1">
+              <div class="flex items-end justify-between gap-1.5 h-36 min-w-[580px] border-b border-slate-100 px-1 pt-6">
+                @for (h of calculationResult?.hourlyDistribution || []; track h.hour) {
+                <div class="flex-1 flex flex-col items-center gap-1 group relative">
+                  
+                  <!-- Hover Tooltip -->
+                  <div class="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+                    <div class="rounded-md bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+                      {{ h.label }}: {{ h.count }} leads • {{ h.verifiedRate }}% verified
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-1"></div>
+                  </div>
+
+                  <!-- Bar -->
+                  <div class="w-full rounded-t-sm overflow-hidden transition-all duration-300 group-hover:brightness-110"
+                    [class.bg-indigo-600]="h.count > 5"
+                    [class.bg-indigo-300]="h.count > 0 && h.count <= 5"
+                    [class.bg-slate-100]="h.count === 0"
+                    [style.height.%]="h.heightPercent">
+                  </div>
+
+                  <!-- Hour Label -->
+                  <span class="text-[9px] font-semibold text-slate-400">
+                    {{ h.hour % 3 === 0 ? h.label : '' }}
+                  </span>
+                </div>
+                }
+              </div>
+            </div>
+
+            <!-- Peak Insights Footer -->
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] text-slate-500 border-t border-slate-50">
+              <span class="flex items-center gap-1.5">
+                <span class="h-2 w-2 rounded-full bg-purple-500"></span>
+                <strong>Prime Inflow Windows:</strong> Morning (10:00 - 12:00) & Evening (18:00 - 21:00)
+              </span>
+              <span class="text-slate-400">Higher bids during prime windows increase verified prospect capture.</span>
+            </div>
+          </div>
+
+          <!-- AD CAMPAIGN ATTRIBUTION & QUALITY MATRIX -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3.5">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">
+                  Ad Campaign & Attribution Matrix
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Granular performance breakdown by active UTM campaign and media channel
+                </p>
+              </div>
+              <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
+                {{ calculationResult?.campaignBreakdown?.length ?? 0 }} Campaigns
+              </span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th class="py-2.5 pl-2">Campaign Name</th>
+                    <th class="py-2.5 px-3">Ad Channel</th>
+                    <th class="py-2.5 px-3 text-right">Leads</th>
+                    <th class="py-2.5 px-3 text-right">Verified Rate</th>
+                    <th class="py-2.5 px-3 text-right">Duplicate Rate</th>
+                    <th class="py-2.5 pr-2 text-right">Share</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (cmp of calculationResult?.campaignBreakdown || []; track cmp.campaign) {
+                  <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="py-2.5 pl-2 font-bold text-slate-800">
+                      {{ cmp.campaign }}
+                    </td>
+                    <td class="py-2.5 px-3">
+                      <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold"
+                        [class.bg-blue-50]="cmp.source.includes('google')"
+                        [class.text-blue-700]="cmp.source.includes('google')"
+                        [class.bg-pink-50]="cmp.source.includes('meta') || cmp.source.includes('instagram')"
+                        [class.text-pink-700]="cmp.source.includes('meta') || cmp.source.includes('instagram')"
+                        [class.bg-red-50]="cmp.source.includes('youtube')"
+                        [class.text-red-700]="cmp.source.includes('youtube')"
+                        [class.bg-slate-100]="!cmp.source.includes('google') && !cmp.source.includes('meta') && !cmp.source.includes('youtube')">
+                        {{ cmp.source }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">
+                      {{ formatNumber(cmp.totalLeads) }}
+                    </td>
+                    <td class="py-2.5 px-3 text-right">
+                      <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold"
+                        [class.bg-emerald-50]="cmp.verifiedRate >= 70"
+                        [class.text-emerald-700]="cmp.verifiedRate >= 70"
+                        [class.bg-amber-50]="cmp.verifiedRate < 70"
+                        [class.text-amber-700]="cmp.verifiedRate < 70">
+                        {{ cmp.verifiedRate }}%
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">
+                      {{ cmp.duplicateRate }}%
+                    </td>
+                    <td class="py-2.5 pr-2 text-right font-bold text-slate-500">
+                      {{ cmp.sharePercent }}%
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="6" class="py-8 text-center text-xs text-slate-400">
+                      No campaign attribution records available.
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Funnel, Channel Attribution & Campus Inflow (4 COLS) -->
+        <div class="space-y-4 xl:col-span-4 min-w-0">
+          
+          <!-- LEAD CONVERSION & QUALITY FUNNEL -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="mb-3.5">
+              <h3 class="text-sm font-bold text-slate-900">
+                Lead Quality Funnel
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Conversion pipeline from submission to unique prospect
+              </p>
+            </div>
+
+            @if (calculationResult?.metrics; as m) {
+            <div class="space-y-2.5">
+              
+              <!-- STAGE 1: GROSS INFLOW -->
+              <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                    <span class="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-700">1</span>
+                    Gross Inflow
+                  </span>
+                  <span class="font-extrabold text-slate-900">{{ formatNumber(m.totalLeads) }} <span class="text-[10px] text-slate-400 font-semibold">(100%)</span></span>
+                </div>
+                <div class="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                  <div class="h-full bg-slate-700 w-full"></div>
+                </div>
+                <span class="text-[10px] text-slate-400 mt-1 block">Total admission inquiries captured</span>
+              </div>
+
+              <!-- STAGE 2: OTP VERIFIED -->
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50/30 p-3">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                    <span class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-200 text-[9px] font-bold text-emerald-800">2</span>
+                    OTP Verified Contacts
+                  </span>
+                  <span class="font-extrabold text-emerald-700">{{ formatNumber(m.otpVerifiedCount) }} <span class="text-[10px] font-semibold">({{ m.otpVerifiedRate }}%)</span></span>
+                </div>
+                <div class="h-1.5 w-full rounded-full bg-emerald-100 overflow-hidden">
+                  <div class="h-full bg-emerald-500" [style.width.%]="m.otpVerifiedRate"></div>
+                </div>
+                <span class="text-[10px] text-emerald-600 mt-1 block">Authentic phone numbers verified via SMS</span>
+              </div>
+
+              <!-- STAGE 3: UNIQUE PROSPECTS -->
+              <div class="rounded-xl border border-blue-100 bg-blue-50/30 p-3">
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-bold text-blue-800 flex items-center gap-1.5">
+                    <span class="flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">3</span>
+                    Deduplicated Prospects
+                  </span>
+                  <span class="font-extrabold text-blue-700">{{ formatNumber(m.uniqueCount) }} <span class="text-[10px] font-semibold">({{ m.uniqueRate }}%)</span></span>
+                </div>
+                <div class="h-1.5 w-full rounded-full bg-blue-100 overflow-hidden">
+                  <div class="h-full bg-blue-600" [style.width.%]="m.uniqueRate"></div>
+                </div>
+                <span class="text-[10px] text-blue-600 mt-1 block">Net actionable parent contacts (0 duplicates)</span>
+              </div>
+
+            </div>
+            }
+          </div>
+
+          <!-- AD CHANNEL ATTRIBUTION (UTM Sources) -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="mb-4">
+              <h3 class="text-sm font-bold text-slate-900">
+                Ad Channels & UTM Sources
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Acquisition source performance & quality
+              </p>
+            </div>
+
+            <div class="space-y-3.5">
+              @for (src of calculationResult?.sourceBreakdown || []; track src.source) {
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full" [ngClass]="src.colorClass"></span>
+                    {{ src.source }}
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-slate-900">{{ src.count }}</span>
+                    <span class="text-slate-400 font-semibold">({{ src.percentage }}%)</span>
+                  </div>
+                </div>
+                <div class="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div [ngClass]="src.colorClass" [style.width.%]="src.percentage" class="transition-all duration-300"></div>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Verified: {{ src.verifiedCount }}</span>
+                  <span class="font-bold text-emerald-600">{{ src.verifiedRate }}% valid</span>
+                </div>
+              </div>
+              } @empty {
+              <div class="py-6 text-center text-xs text-slate-400">
+                No source attribution data available.
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- CAMPUS & BRANCH QUALITY INFLOW -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="mb-3.5 flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">
+                  Campus Inflow Distribution
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Lead concentration across school campuses
+                </p>
+              </div>
+              <span class="rounded-lg bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                {{ calculationResult?.branchBreakdown?.length ?? 0 }} Campuses
+              </span>
+            </div>
+
+            <div class="space-y-3">
+              @for (b of calculationResult?.branchBreakdown || []; track b.branch) {
+              <div>
+                <div class="flex items-center justify-between text-xs mb-1">
+                  <span class="font-bold text-slate-800 truncate max-w-[170px]" [title]="b.branch">
+                    {{ b.branch }}
+                  </span>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span class="font-extrabold text-slate-900">{{ b.totalLeads }}</span>
+                    <span class="text-slate-400 font-semibold text-[11px]">({{ b.sharePercent }}%)</span>
+                  </div>
+                </div>
+                <div class="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div class="bg-indigo-600 transition-all duration-300" [style.width.%]="b.sharePercent"></div>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>{{ b.city }}</span>
+                  <span class="font-bold text-emerald-600">{{ b.verifiedRate }}% verified</span>
+                </div>
+              </div>
+              } @empty {
+              <div class="py-6 text-center text-xs text-slate-400">
+                No campus breakdown available.
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- RECENT LEADS INFLOW FEED -->
+          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-slate-900">
+                Recent Inbound Leads
+              </h3>
+              <button type="button" (click)="navigateToLeads()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                View All →
+              </button>
+            </div>
+
+            <div class="space-y-2.5">
+              @for (lead of (calculationResult?.filteredLeads || []).slice(0, 6); track lead.id) {
+              <div class="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-xs text-slate-900 truncate max-w-[130px]">
+                    {{ lead.name || 'Anonymous' }}
+                  </span>
+                  <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold"
+                    [class.bg-emerald-50]="lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID'"
+                    [class.text-emerald-700]="lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID'"
+                    [class.bg-amber-50]="lead.otp_validation !== 'Verified' && lead.otp_validation !== 'VALID'"
+                    [class.text-amber-700]="lead.otp_validation !== 'Verified' && lead.otp_validation !== 'VALID'">
+                    {{ lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID' ? 'Verified' : 'Pending' }}
+                  </span>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                  <span class="truncate max-w-[150px]">{{ lead.course || lead.class || 'Inquiry' }} • {{ lead.branch || lead.city || 'Campus' }}</span>
+                  <span class="text-slate-400 shrink-0">{{ lead.entrydate ? lead.entrydate.split(' ')[1] : '' }}</span>
+                </div>
+              </div>
+              } @empty {
+              <div class="py-6 text-center text-xs text-slate-400">
+                No recent leads matching current filters.
+              </div>
+              }
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+</div>

@@ -1,0 +1,176 @@
+<section class="relative overflow-hidden rounded-lg border border-slate-200 bg-white">
+
+  <!-- Top gradient line -->
+  <div class="h-[2px] w-full bg-[#8c7ae6]"></div>
+
+  <!-- Header -->
+  <div class="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+    <div class="flex items-center gap-3">
+
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white shadow-2xs">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 6h16"></path>
+          <path d="M7 12h10"></path>
+          <path d="M10 18h4"></path>
+        </svg>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold text-slate-950">
+          Lead Filters
+        </h3>
+      </div>
+
+    </div>
+
+    <button type="button" (click)="applyFilters()"
+      class="inline-flex h-9 items-center gap-2 rounded-lg bg-slate-900 px-4 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#8c7ae6]">
+      Apply Filters
+
+      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14"></path>
+        <path d="m13 6 6 6-6 6"></path>
+      </svg>
+    </button>
+
+    <!-- Active filter count -->
+    @if (activeFilterCount > 0) {
+    <div
+      class="inline-flex w-fit items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-[11px] font-semibold text-violet-600">
+      <span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
+      {{ activeFilterCount }} active filter{{ activeFilterCount > 1 ? 's' : '' }}
+    </div>
+    }
+
+  </div>
+
+  <!-- Filters -->
+  <div class="p-5">
+
+    <div class="grid gap-4 lg:grid-cols-12">
+
+      <!-- LP -->
+      <div class="lg:col-span-3">
+
+        <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          LP / Website
+        </label>
+
+        <div class="relative">
+
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="M7 8h10"></path>
+            <path d="M7 12h6"></path>
+          </svg>
+
+          <select [(ngModel)]="filters.selectedLP" (ngModelChange)="emitFilterChange()"
+            class="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20">
+            <option value="">All Landing Pages</option>
+
+            @for (lp of landingPages; track lp) {
+            <option [value]="lp">
+              {{ lp }}
+            </option>
+            }
+          </select>
+
+          <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"></path>
+          </svg>
+
+        </div>
+
+      </div>
+
+      <!-- Search -->
+      <div class="lg:col-span-3">
+
+        <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Search Leads
+        </label>
+
+        <div class="relative">
+
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-4-4"></path>
+          </svg>
+
+          <input [(ngModel)]="filters.search" (ngModelChange)="emitFilterChange()" type="text"
+            placeholder="Name, phone or email..."
+            class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20" />
+
+        </div>
+
+      </div>
+
+      <!-- Start Date -->
+      <div class="lg:col-span-2">
+
+        <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Start Date
+        </label>
+
+        <input [(ngModel)]="filters.startDate" (ngModelChange)="emitFilterChange()" type="date"
+          class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20" />
+
+      </div>
+
+      <!-- End Date -->
+      <div class="lg:col-span-2">
+
+        <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          End Date
+        </label>
+
+        <input [(ngModel)]="filters.endDate" (ngModelChange)="emitFilterChange()" type="date"
+          class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20" />
+
+      </div>
+
+      <!-- Category -->
+      <div class="lg:col-span-2">
+
+        <label class="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Class Category
+        </label>
+
+        <div class="relative">
+
+          <select [(ngModel)]="filters.classCategory" (ngModelChange)="emitFilterChange()"
+            class="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20">
+            <option value="">All Categories</option>
+            <option value="Category 1">Category 1</option>
+            <option value="Category 2">Category 2</option>
+            <option value="Category 3">Category 3</option>
+          </select>
+
+          <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"></path>
+          </svg>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom actions -->
+    <div class="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div class="flex gap-2">
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

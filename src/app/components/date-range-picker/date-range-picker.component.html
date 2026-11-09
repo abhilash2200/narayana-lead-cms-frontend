@@ -1,0 +1,209 @@
+<div class="relative inline-block text-left">
+  <!-- TRIGGER BUTTON -->
+  <button
+    type="button"
+    (click)="toggleOpen()"
+    [disabled]="disabled"
+    class="group inline-flex h-8.5 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 focus:border-[#8c7ae6] focus:outline-none focus:ring-2 focus:ring-[#8c7ae6]/20 disabled:cursor-not-allowed disabled:opacity-50">
+    <svg class="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+
+    <span [class.text-slate-400]="!hasSelection" [class.font-semibold]="hasSelection" [class.text-slate-800]="hasSelection" class="whitespace-nowrap">
+      {{ displayText }}
+    </span>
+
+    @if (hasSelection) {
+      <span
+        (click)="clearSelection($event)"
+        title="Clear date filter"
+        class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-700">
+        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </span>
+    }
+
+    <svg class="h-3.5 w-3.5 text-slate-400 transition-transform duration-200 shrink-0" [class.rotate-180]="isOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <!-- FLOATING RANGE CALENDAR POPOVER -->
+  @if (isOpen) {
+    <div
+      class="absolute left-0 top-full z-[100] mt-2 flex flex-col md:flex-row overflow-hidden rounded-2xl border border-slate-800 bg-[#090d16] text-white shadow-2xl animate-in fade-in zoom-in-95 duration-150 w-max max-w-[calc(100vw-2rem)]">
+      
+      <!-- PRESETS SIDEBAR -->
+      <div class="flex flex-row md:flex-col gap-1 border-b md:border-b-0 md:border-r border-slate-800/80 bg-[#060910] p-3 text-xs overflow-x-auto w-auto md:w-[130px] shrink-0">
+        <p class="hidden md:block mb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Presets
+        </p>
+        @for (preset of presets; track preset.label) {
+          <button
+            type="button"
+            (click)="applyPreset(preset)"
+            class="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white">
+            {{ preset.label }}
+          </button>
+        }
+      </div>
+
+      <!-- CALENDAR AREA -->
+      <div class="p-4 shrink-0">
+        <!-- MONTHS CONTAINER: DUAL MONTHS -->
+        <div class="flex flex-col sm:flex-row gap-6">
+
+          <!-- MONTH 1 (LEFT) -->
+          <div class="w-[252px] shrink-0">
+            <!-- HEADER -->
+            <div class="mb-3 flex items-center justify-between">
+              <button
+                type="button"
+                (click)="prevMonth()"
+                aria-label="Previous Month"
+                class="flex h-7 w-7 items-center justify-center rounded-md border border-slate-800 text-slate-300 transition hover:bg-slate-800 hover:text-white">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <h4 class="text-xs font-semibold text-white tracking-wide">
+                {{ getMonthTitle(leftMonthDate) }}
+              </h4>
+
+              <div class="w-7 sm:hidden"></div>
+            </div>
+
+            <!-- WEEKDAY HEADER -->
+            <div class="grid grid-cols-7 mb-1 text-center text-[11px] font-medium text-slate-400">
+              @for (dayName of weekDays; track dayName) {
+                <div class="h-7 flex items-center justify-center">{{ dayName }}</div>
+              }
+            </div>
+
+            <!-- DAYS GRID -->
+            <div class="grid grid-cols-7 gap-y-1">
+              @for (day of leftDays; track day.dateString) {
+                <div
+                  class="relative h-8 flex items-center justify-center text-xs"
+                  [class.bg-slate-800]="day.isRangeBridge"
+                  [class.rounded-l-full]="day.isSelectedStart && selectedEnd"
+                  [class.rounded-r-full]="day.isSelectedEnd">
+                  
+                  <button
+                    type="button"
+                    (click)="onDayClick(day)"
+                    (mouseenter)="onDayHover(day)"
+                    [class.text-slate-600]="!day.isCurrentMonth"
+                    [class.text-white]="day.isCurrentMonth && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.hover:bg-slate-800]="day.isCurrentMonth && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.bg-white]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.text-slate-950]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.font-bold]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.shadow-md]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.ring-1]="day.isToday && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.ring-slate-500]="day.isToday && !day.isSelectedStart && !day.isSelectedEnd"
+                    class="h-8 w-8 rounded-full flex items-center justify-center transition-all duration-100">
+                    {{ day.dayNumber }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- MONTH 2 (RIGHT) -->
+          <div class="w-[252px] shrink-0">
+            <!-- HEADER -->
+            <div class="mb-3 flex items-center justify-between">
+              <div class="w-7 sm:hidden"></div>
+
+              <h4 class="text-xs font-semibold text-white tracking-wide">
+                {{ getMonthTitle(rightMonthDate) }}
+              </h4>
+
+              <button
+                type="button"
+                (click)="nextMonth()"
+                aria-label="Next Month"
+                class="flex h-7 w-7 items-center justify-center rounded-md border border-slate-800 text-slate-300 transition hover:bg-slate-800 hover:text-white">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- WEEKDAY HEADER -->
+            <div class="grid grid-cols-7 mb-1 text-center text-[11px] font-medium text-slate-400">
+              @for (dayName of weekDays; track dayName) {
+                <div class="h-7 flex items-center justify-center">{{ dayName }}</div>
+              }
+            </div>
+
+            <!-- DAYS GRID -->
+            <div class="grid grid-cols-7 gap-y-1">
+              @for (day of rightDays; track day.dateString) {
+                <div
+                  class="relative h-8 flex items-center justify-center text-xs"
+                  [class.bg-slate-800]="day.isRangeBridge"
+                  [class.rounded-l-full]="day.isSelectedStart && selectedEnd"
+                  [class.rounded-r-full]="day.isSelectedEnd">
+                  
+                  <button
+                    type="button"
+                    (click)="onDayClick(day)"
+                    (mouseenter)="onDayHover(day)"
+                    [class.text-slate-600]="!day.isCurrentMonth"
+                    [class.text-white]="day.isCurrentMonth && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.hover:bg-slate-800]="day.isCurrentMonth && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.bg-white]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.text-slate-950]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.font-bold]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.shadow-md]="day.isSelectedStart || day.isSelectedEnd"
+                    [class.ring-1]="day.isToday && !day.isSelectedStart && !day.isSelectedEnd"
+                    [class.ring-slate-500]="day.isToday && !day.isSelectedStart && !day.isSelectedEnd"
+                    class="h-8 w-8 rounded-full flex items-center justify-center transition-all duration-100">
+                    {{ day.dayNumber }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+          <div class="text-[11px] text-slate-400">
+            @if (selectedStart && !selectedEnd) {
+              <span class="text-indigo-400">Click second date to complete range</span>
+            } @else if (selectedStart && selectedEnd) {
+              <span>Range: <strong class="text-white">{{ selectedStart }}</strong> to <strong class="text-white">{{ selectedEnd }}</strong></span>
+            } @else {
+              <span>Select start date</span>
+            }
+          </div>
+
+          <div class="flex items-center gap-2">
+            @if (hasSelection) {
+              <button
+                type="button"
+                (click)="clearSelection()"
+                class="rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-400 hover:text-white transition">
+                Clear
+              </button>
+            }
+            <button
+              type="button"
+              (click)="close()"
+              class="rounded-lg bg-white px-3 py-1 text-xs font-bold text-slate-950 hover:bg-slate-200 transition">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

@@ -1,0 +1,108 @@
+<section class="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-2xs">
+  <!-- HEADER -->
+  <header class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+    <div>
+      <div class="flex items-center gap-2">
+        <h3 class="text-sm font-bold text-slate-900">
+          Acquisition Channels
+        </h3>
+        <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100">
+          30 Days
+        </span>
+      </div>
+      <p class="mt-0.5 text-[11px] text-slate-400">
+        Lead origin distribution
+      </p>
+    </div>
+  </header>
+
+  <!-- DONUT + METRICS -->
+  <div class="my-4 flex items-center gap-4">
+    <!-- DONUT -->
+    <div class="relative h-[110px] w-[110px] shrink-0">
+      <svg class="h-full w-full -rotate-90 drop-shadow-2xs" viewBox="0 0 200 200">
+        <!-- BACKGROUND -->
+        <circle cx="100" cy="100" r="72" fill="none" stroke="#f1f5f9" stroke-width="20" />
+
+        <!-- ORGANIC (44% = 199 of 452) -->
+        <circle cx="100" cy="100" r="72" fill="none" stroke="#8c7ae6" stroke-width="20" stroke-dasharray="199 452"
+          stroke-dashoffset="0" stroke-linecap="butt" />
+
+        <!-- PAID (35% = 158 of 452) -->
+        <circle cx="100" cy="100" r="72" fill="none" stroke="#818cf8" stroke-width="20" stroke-dasharray="158 452"
+          stroke-dashoffset="-199" stroke-linecap="butt" />
+
+        <!-- DIRECT (21% = 95 of 452) -->
+        <circle cx="100" cy="100" r="72" fill="none" stroke="#cbd5e1" stroke-width="20" stroke-dasharray="95 452"
+          stroke-dashoffset="-357" stroke-linecap="butt" />
+      </svg>
+
+      <!-- CENTER STAT -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-xl font-black tracking-tight text-slate-900">
+          1.42K
+        </span>
+        <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+          Leads
+        </span>
+      </div>
+    </div>
+
+    <!-- KPI MINI-CARDS -->
+    <div class="min-w-0 flex-1 space-y-2">
+      <div class="flex items-center justify-between rounded-lg bg-slate-50/80 px-2.5 py-1.5 border border-slate-100">
+        <span class="text-[11px] font-medium text-slate-500">
+          Conversion
+        </span>
+        <span class="text-xs font-bold text-slate-800">
+          24.6%
+        </span>
+      </div>
+
+      <div class="flex items-center justify-between rounded-lg bg-slate-50/80 px-2.5 py-1.5 border border-slate-100">
+        <span class="text-[11px] font-medium text-slate-500">
+          Cost / Lead
+        </span>
+        <span class="text-xs font-bold text-slate-800">
+          $12.40
+        </span>
+      </div>
+
+      <div class="flex items-center justify-between rounded-lg bg-indigo-50/50 px-2.5 py-1.5 border border-indigo-100/60">
+        <span class="text-[11px] font-medium text-indigo-700">
+          Quality Score
+        </span>
+        <span class="text-xs font-extrabold text-[#8c7ae6]">
+          A+ (High)
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANNEL LIST WITH PROGRESS BARS -->
+  <div class="space-y-2">
+    @for (item of categories; track item.name) {
+    <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 transition hover:bg-slate-50">
+      <div class="flex items-center justify-between gap-2 mb-1.5">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="h-2.5 w-2.5 shrink-0 rounded-full" [ngClass]="item.colorClass"></span>
+          <span class="truncate text-xs font-bold text-slate-800">
+            {{ item.name }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs font-bold text-slate-900">{{ item.count }}</span>
+          <span class="rounded-md bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-200/60">
+            {{ item.percentage }}%
+          </span>
+        </div>
+      </div>
+      <!-- Progress Bar -->
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/60">
+        <div class="h-full rounded-full transition-all duration-300" [ngClass]="item.colorClass" [style.width.%]="item.percentage"></div>
+      </div>
+    </div>
+    }
+  </div>
+
+</section>

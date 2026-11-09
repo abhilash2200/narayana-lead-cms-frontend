@@ -1,0 +1,260 @@
+<section>
+  <!-- COMPACT HEADER & TOOLBAR -->
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-lg font-bold text-slate-800">
+        Dynamic Pages
+      </h2>
+      <p class="text-xs text-slate-500">
+        Manage city, branch, and class landing page scopes.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <div class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-2xs">
+        <span class="text-slate-500">Total Scopes:</span>
+        <span class="ml-1.5 font-bold text-slate-800">
+          {{ filteredPages.length }}
+        </span>
+      </div>
+
+      <button type="button" (click)="addPage.emit()"
+        class="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+        <span class="text-sm font-bold leading-none">+</span>
+        Create Page
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTER TOOLBAR -->
+  <div class="mb-4 rounded-lg border border-slate-200 bg-white p-3.5 shadow-xs">
+    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-5">
+      <!-- SEARCH INPUT -->
+      <div class="relative md:col-span-1">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onFilterChange()"
+          placeholder="Search scope or path..."
+          class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+        <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      <!-- CITY FILTER -->
+      <div>
+        <select [(ngModel)]="selectedCityId" (ngModelChange)="onCityChange()"
+          class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+          <option value="">All Cities</option>
+          @for (city of cities; track city.id) {
+          <option [value]="city.id">{{ city.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- BRANCH FILTER -->
+      <div>
+        <select [(ngModel)]="selectedBranchId" (ngModelChange)="onFilterChange()"
+          class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+          <option value="">All Branches</option>
+          @for (branch of availableBranches; track branch.id) {
+          <option [value]="branch.id">{{ branch.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- CLASS FILTER -->
+      <div>
+        <select [(ngModel)]="selectedClassId" (ngModelChange)="onFilterChange()"
+          class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+          <option value="">All Classes</option>
+          @for (cls of classes; track cls.id) {
+          <option [value]="cls.id">{{ cls.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- STATUS FILTER -->
+      <div>
+        <select [(ngModel)]="selectedStatus" (ngModelChange)="onFilterChange()"
+          class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="border-b border-slate-200 bg-slate-50/75">
+          <tr>
+            <th class="w-16 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              ID
+            </th>
+            <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              Page Scope / Path
+            </th>
+            <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              City / Branch
+            </th>
+            <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              Class
+            </th>
+            <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+              Status
+            </th>
+            <th class="px-3.5 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-600">
+              Actions
+            </th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-100">
+          @if (paginatedPages.length > 0) {
+          @for (page of paginatedPages; track page.id) {
+          <tr class="transition hover:bg-slate-50/80">
+            <!-- ID -->
+            <td class="px-3.5 py-2.5 font-mono text-xs font-semibold text-slate-500">
+              #{{ page.id }}
+            </td>
+
+            <!-- SCOPE & PATH -->
+            <td class="px-3.5 py-2.5">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold text-slate-900">
+                    {{ page.title }}
+                  </span>
+                  @if (page.scopeKey) {
+                  <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600 font-medium">
+                    {{ page.scopeKey }}
+                  </span>
+                  }
+                </div>
+                <div class="mt-0.5 font-mono text-xs font-medium text-indigo-600">
+                  {{ page.canonicalPath || page.slug }}
+                </div>
+              </div>
+            </td>
+
+            <!-- CITY & BRANCH -->
+            <td class="px-3.5 py-2.5">
+              <div class="flex items-center gap-1.5 text-xs text-slate-800">
+                <span class="font-medium text-slate-900">{{ page.cityName }}</span>
+                @if (page.branchName) {
+                <span class="text-slate-400">/</span>
+                <span class="rounded bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                  {{ page.branchName }}
+                </span>
+                }
+              </div>
+            </td>
+
+            <!-- CLASS -->
+            <td class="px-3.5 py-2.5">
+              @if (page.className) {
+              <span class="inline-flex rounded bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                {{ page.className }}
+              </span>
+              } @else {
+              <span class="text-xs text-slate-500 italic">
+                All Classes
+              </span>
+              }
+            </td>
+
+            <!-- STATUS -->
+            <td class="px-3.5 py-2.5">
+              <button type="button" (click)="togglePageStatus(page)"
+                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition"
+                [class.border-emerald-200]="page.status === 'Active'" [class.bg-emerald-50]="page.status === 'Active'"
+                [class.border-slate-200]="page.status !== 'Active'" [class.bg-slate-50]="page.status !== 'Active'">
+                <span class="h-2 w-2 rounded-full" [class.bg-emerald-500]="page.status === 'Active'"
+                  [class.bg-slate-400]="page.status !== 'Active'"></span>
+                <span class="text-xs font-bold" [class.text-emerald-700]="page.status === 'Active'"
+                  [class.text-slate-600]="page.status !== 'Active'">
+                  {{ page.status }}
+                </span>
+              </button>
+            </td>
+
+            <!-- ACTIONS -->
+            <td class="px-3.5 py-2.5 text-right">
+              <div class="inline-flex items-center gap-1.5">
+                <button type="button" (click)="editPage.emit(page)"
+                  class="rounded-md border border-indigo-200/60 bg-indigo-50/70 px-2.5 py-1 text-xs font-bold text-indigo-600 transition hover:bg-indigo-100">
+                  Page Details
+                </button>
+
+                <button type="button" (click)="duplicatePage.emit(page)"
+                  class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+                  <svg class="h-3 w-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Clone
+                </button>
+
+                <button type="button" (click)="deletePage.emit(page)"
+                  class="rounded-md border border-red-200/60 bg-red-50/70 px-2.5 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-100">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          } @else {
+          <tr>
+            <td colspan="6" class="py-12 text-center">
+              <p class="text-xs font-semibold text-slate-600">
+                No dynamic page scopes found
+              </p>
+              <p class="mt-1 text-[11px] text-slate-400">
+                {{ searchTerm || selectedCityId || selectedBranchId || selectedClassId ? 'Try adjusting your scope
+                filters.' : 'Create your first page scope to get started.' }}
+              </p>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION FOOTER -->
+    @if (totalPages > 1) {
+    <div class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-3.5 py-2.5 sm:flex-row">
+      <span class="text-[11px] text-slate-500">
+        Showing <span class="font-medium text-slate-700">{{ showingStart }}</span> to
+        <span class="font-medium text-slate-700">{{ showingEnd }}</span> of
+        <span class="font-medium text-slate-700">{{ filteredPages.length }}</span> pages
+      </span>
+
+      <div class="flex items-center gap-1">
+        <button type="button" (click)="previousPage()" [disabled]="currentPage === 1"
+          class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+          Previous
+        </button>
+
+        @for (p of pageNumbers; track p) {
+        <button type="button" (click)="goToPage(p)" [class.bg-indigo-600]="p === currentPage"
+          [class.text-white]="p === currentPage" [class.border-indigo-600]="p === currentPage"
+          [class.bg-white]="p !== currentPage" [class.text-slate-600]="p !== currentPage"
+          [class.border-slate-200]="p !== currentPage"
+          class="h-7 w-7 rounded-md border text-xs font-semibold shadow-2xs transition hover:bg-slate-100">
+          {{ p }}
+        </button>
+        }
+
+        <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages"
+          class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+          Next
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</section>

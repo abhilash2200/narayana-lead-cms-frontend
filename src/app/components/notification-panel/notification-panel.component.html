@@ -1,0 +1,145 @@
+<div class="h-full w-full bg-white rounded-xl border border-slate-200/80 flex flex-col overflow-hidden shadow-2xs">
+  <!-- HEADER -->
+  <div class="px-4 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+    <div class="flex items-center gap-2.5">
+      <div class="relative flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/60">
+        <!-- Pulsing ring continuous animation -->
+        <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+        </span>
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <h2 class="text-xs font-bold tracking-tight text-slate-900">Live Alerts</h2>
+          <span class="rounded-full bg-indigo-50 px-2 py-0.2 text-[9px] font-bold text-indigo-700 border border-indigo-100/60">
+            {{ unreadCount }} New
+          </span>
+        </div>
+        <p class="text-[10px] text-slate-400">Real-time system events</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1">
+      <button type="button" (click)="markAllAsRead()" title="Mark all as read"
+        class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold text-slate-500 hover:text-indigo-600 hover:bg-white border border-transparent hover:border-slate-200 transition">
+        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Read all</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="flex items-center gap-1 px-3 py-2 border-b border-slate-100 bg-white">
+    <button type="button" (click)="activeTab = 'all'"
+      class="rounded-md px-2 py-1 text-[10px] font-bold transition"
+      [class.bg-indigo-50]="activeTab === 'all'"
+      [class.text-indigo-700]="activeTab === 'all'"
+      [class.text-slate-500]="activeTab !== 'all'">
+      All
+    </button>
+    <button type="button" (click)="activeTab = 'lead'"
+      class="rounded-md px-2 py-1 text-[10px] font-bold transition"
+      [class.bg-indigo-50]="activeTab === 'lead'"
+      [class.text-indigo-700]="activeTab === 'lead'"
+      [class.text-slate-500]="activeTab !== 'lead'">
+      Leads
+    </button>
+    <button type="button" (click)="activeTab = 'campaign'"
+      class="rounded-md px-2 py-1 text-[10px] font-bold transition"
+      [class.bg-indigo-50]="activeTab === 'campaign'"
+      [class.text-indigo-700]="activeTab === 'campaign'"
+      [class.text-slate-500]="activeTab !== 'campaign'">
+      Campaigns
+    </button>
+    <button type="button" (click)="activeTab = 'system'"
+      class="rounded-md px-2 py-1 text-[10px] font-bold transition"
+      [class.bg-indigo-50]="activeTab === 'system'"
+      [class.text-indigo-700]="activeTab === 'system'"
+      [class.text-slate-500]="activeTab !== 'system'">
+      System
+    </button>
+  </div>
+
+  <!-- NOTIFICATIONS LIST -->
+  <div class="p-3 space-y-2 bg-slate-50/30 flex-1">
+    <div *ngFor="let item of limitedNotifications" (click)="markAsRead(item)"
+      class="group relative bg-white rounded-xl p-2.5 border border-slate-200/70 shadow-2xs hover:shadow-xs hover:border-indigo-200 transition-all duration-200 cursor-pointer"
+      [class.bg-indigo-50/20]="!item.read" [class.border-indigo-100]="!item.read">
+      <div class="flex items-center gap-2.5">
+        <!-- Type Icon -->
+        <div
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-2xs transition-transform duration-200 group-hover:scale-105"
+          [ngClass]="{
+            'bg-emerald-50 text-emerald-600 border border-emerald-100': item.type === 'lead',
+            'bg-blue-50 text-blue-600 border border-blue-100': item.type === 'campaign',
+            'bg-amber-50 text-amber-600 border border-amber-100': item.type === 'system',
+            'bg-violet-50 text-violet-600 border border-violet-100': item.type === 'security'
+          }">
+          <!-- Lead SVG -->
+          <svg *ngIf="item.type === 'lead'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          <!-- Campaign SVG -->
+          <svg *ngIf="item.type === 'campaign'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+          </svg>
+          <!-- System SVG -->
+          <svg *ngIf="item.type === 'system'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <!-- Security SVG -->
+          <svg *ngIf="item.type === 'security'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <h4 class="text-[11px] font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+              {{ item.title }}
+            </h4>
+            <span class="text-[9px] font-medium text-slate-400 shrink-0">
+              {{ item.time }}
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 truncate mt-0.5">
+            {{ item.description }}
+          </p>
+        </div>
+
+        <!-- Unread Indicator -->
+        <span *ngIf="!item.read" class="flex h-2 w-2 rounded-full bg-indigo-600 shrink-0"></span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="limitedNotifications.length === 0" class="py-6 text-center">
+      <p class="text-xs font-medium text-slate-400">No notifications in this filter.</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="px-3.5 py-2.5 border-t border-slate-100 bg-white flex items-center justify-between">
+    <button type="button" (click)="clearAll()"
+      class="text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+      Clear all
+    </button>
+    <div class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600">
+      <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+      <span>Gateway Live</span>
+    </div>
+  </div>
+</div>

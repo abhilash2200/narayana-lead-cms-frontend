@@ -1,0 +1,131 @@
+@if (showToastMessage) {
+<div
+  class="fixed right-5 top-5 z-[9999] flex min-w-[280px] items-center gap-2.5 rounded-lg border bg-white px-3.5 py-2.5 shadow-lg"
+  [class.border-emerald-200]="toastType === 'success'" [class.border-red-200]="toastType === 'error'">
+  <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+    [class.bg-emerald-100]="toastType === 'success'" [class.text-emerald-600]="toastType === 'success'"
+    [class.bg-red-100]="toastType === 'error'" [class.text-red-600]="toastType === 'error'">
+    @if (toastType === 'success') {
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+    </svg>
+    } @else {
+    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01" />
+    </svg>
+    }
+  </div>
+
+  <div>
+    <p class="text-xs font-semibold text-slate-800">
+      {{ toastType === 'success' ? 'Success' : 'Error' }}
+    </p>
+    <p class="text-[11px] text-slate-500">
+      {{ toastMessage }}
+    </p>
+  </div>
+</div>
+}
+
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <app-sidebar></app-sidebar>
+
+  <div class="lg:ml-[230px]">
+    <app-topbar title="Add Branch" subtitle="Branch Master"></app-topbar>
+
+    <main class="p-3.5 md:p-5">
+      <div class="w-full">
+
+        <!-- COMPACT HEADER -->
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h1 class="text-lg font-bold text-slate-800">Add Branch</h1>
+            <p class="text-xs text-slate-500">Create a new branch master record under a city.</p>
+          </div>
+
+          <button type="button" (click)="goBack()"
+            class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-2xs transition hover:bg-slate-50">
+            ← Back
+          </button>
+        </div>
+
+        <!-- COMPACT FORM CARD -->
+        <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-xs">
+          <form #branchForm="ngForm" (ngSubmit)="saveBranch(branchForm)">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+              <!-- CITY -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Select City <span class="text-rose-500">*</span>
+                </label>
+                <select name="city" [(ngModel)]="selectedCityId" required
+                  class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+                  <option [ngValue]="null">Select City</option>
+                  @for (city of cities; track city.id) {
+                  <option [ngValue]="city.id">{{ city.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- BRANCH NAME -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Branch Name <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="branchName" [(ngModel)]="branchName" (ngModelChange)="generateSlug()" required
+                  placeholder="Enter branch name"
+                  class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+              </div>
+
+              <!-- SLUG -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Slug <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="slug" [(ngModel)]="branchSlug" required placeholder="e.g. saltlake"
+                  class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+              </div>
+
+              <!-- STATUS -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Status
+                </label>
+                <select name="status" [(ngModel)]="branchStatus"
+                  class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+
+              <!-- SORT ORDER -->
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Sort Order
+                </label>
+                <input type="number" name="sortOrder" [(ngModel)]="sortOrder" min="0"
+                  class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+              </div>
+
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+              <button type="button" (click)="goBack()"
+                class="h-8.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                Cancel
+              </button>
+
+              <button type="submit" [disabled]="isSaving"
+                class="h-8.5 rounded-lg bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60">
+                {{ isSaving ? 'Saving...' : 'Save Branch' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>

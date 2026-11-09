@@ -1,0 +1,20 @@
+{
+  "/api": {
+    "target": "https://apiframework.wbnarayanaschools.in",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/storage": {
+    "target": "https://apiframework.wbnarayanaschools.in",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/uploads": {
+    "target": "https://apiframework.wbnarayanaschools.in",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

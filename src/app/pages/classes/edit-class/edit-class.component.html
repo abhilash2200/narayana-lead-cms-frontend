@@ -1,0 +1,178 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <app-sidebar></app-sidebar>
+
+  <div class="lg:ml-[230px]">
+    <app-topbar title="Edit Class" subtitle="Class Master"></app-topbar>
+
+    <main class="p-3.5 md:p-5">
+      <div class="w-full max-w-4xl">
+
+        <!-- COMPACT HEADER -->
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h1 class="text-lg font-bold text-slate-800">Edit Class</h1>
+            <p class="text-xs text-slate-500">Update class master record.</p>
+          </div>
+
+          <button type="button" (click)="goBack()"
+            class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-2xs transition hover:bg-slate-50">
+            ← Back
+          </button>
+        </div>
+
+        <!-- ERROR MESSAGE -->
+        @if (errorMessage && !isLoading) {
+        <div class="mb-4 rounded-lg border border-red-100 bg-red-50 px-3.5 py-2 text-xs font-medium text-red-600">
+          {{ errorMessage }}
+        </div>
+        }
+
+        <!-- COMPACT FORM CARD -->
+        <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-xs">
+
+          <!-- LOADING STATE -->
+          @if (isLoading) {
+          <div class="flex items-center justify-center py-16">
+            <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <svg class="h-4 w-4 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              Loading class details...
+            </div>
+          </div>
+          } @else {
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+            <!-- CLASS NAME -->
+            <div>
+              <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                Class Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" [(ngModel)]="name" (ngModelChange)="generateSlug()" placeholder="Enter class name"
+                class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+            </div>
+
+            <!-- SLUG -->
+            <div>
+              <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                Slug <span class="text-red-500">*</span>
+              </label>
+              <input type="text" [(ngModel)]="slug" placeholder="e.g. class-1"
+                class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-mono font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+            </div>
+
+            <!-- STATUS -->
+            <div>
+              <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                Status
+              </label>
+              <select [(ngModel)]="status"
+                class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
+
+            <!-- SORT ORDER -->
+            <div>
+              <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+                Sort Order
+              </label>
+              <input type="number" [(ngModel)]="sortOrder" min="0"
+                class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-800 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10" />
+            </div>
+
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+            <!-- DELETE BUTTON -->
+            <button type="button" (click)="confirmDelete()" [disabled]="saving || isDeleting"
+              class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50">
+              Delete Class
+            </button>
+
+            <div class="flex items-center gap-2">
+              <button type="button" (click)="goBack()" [disabled]="saving || isDeleting"
+                class="h-8.5 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                Cancel
+              </button>
+
+              <button type="button" (click)="saveClass()" [disabled]="saving || isDeleting"
+                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60">
+                @if (saving) {
+                <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Saving...
+                } @else {
+                Save Changes
+                }
+              </button>
+            </div>
+          </div>
+          }
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+@if (showDeleteConfirm) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+  <div class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-xl transition-all">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-slate-800">Delete Class</h3>
+        <p class="mt-1 text-xs text-slate-500">
+          Are you sure you want to delete <span class="font-semibold text-slate-700">"{{ name }}"</span>? This action
+          cannot be undone.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-5 flex items-center justify-end gap-2">
+      <button type="button" (click)="cancelDelete()" [disabled]="isDeleting"
+        class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+        Cancel
+      </button>
+      <button type="button" (click)="deleteClass()" [disabled]="isDeleting"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50">
+        @if (isDeleting) {
+        <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        Deleting...
+        } @else {
+        Delete
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- TOAST NOTIFICATION -->
+@if (toastMessage) {
+<div
+  class="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-2.5 shadow-lg transition-all"
+  [class.bg-emerald-900]="toastType === 'success'" [class.text-white]="toastType === 'success'"
+  [class.border-emerald-700]="toastType === 'success'" [class.bg-amber-900]="toastType === 'warning'"
+  [class.text-amber-100]="toastType === 'warning'" [class.border-amber-700]="toastType === 'warning'"
+  [class.bg-red-900]="toastType === 'error'" [class.text-white]="toastType === 'error'"
+  [class.border-red-700]="toastType === 'error'">
+  <span class="text-xs font-semibold">{{ toastMessage }}</span>
+</div>
+}

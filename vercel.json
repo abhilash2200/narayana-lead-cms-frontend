@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://apiframework.wbnarayanaschools.in/api/:path*"
+    },
+    {
+      "source": "/storage/:path*",
+      "destination": "https://apiframework.wbnarayanaschools.in/storage/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://apiframework.wbnarayanaschools.in/uploads/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

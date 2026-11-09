@@ -1,0 +1,516 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <app-sidebar></app-sidebar>
+
+  <div class="lg:ml-[230px]">
+    <app-topbar [title]="editingPageId !== null ? 'Edit Dynamic Page' : 'Create Dynamic Page'"
+      subtitle="Page Builder"></app-topbar>
+
+    <main>
+      <!-- PAGE HEADER (Compact Fitted) -->
+      <div class="border-b border-slate-200/80 bg-white px-4 py-3 sm:px-6">
+        <div class="w-full flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f5f3ff] text-sm font-bold text-[#8c7ae6]">
+              #
+            </span>
+            <div>
+              <h1 class="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+                {{ editingPageId !== null ? 'Edit Dynamic Page' : 'Create Dynamic Page' }}
+              </h1>
+              <p class="text-xs font-medium text-slate-500">
+                Location & scope configuration
+              </p>
+            </div>
+          </div>
+
+          <!-- BACK BUTTON -->
+          <button type="button" (click)="goBackToList()"
+            class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900">
+            ← Back to Pages
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT (Fitted Margins) -->
+      <div class="w-full p-3 sm:p-5">
+
+        @if (isLoadingPageData) {
+        <div
+          class="mb-4 flex items-center justify-center gap-2.5 rounded-2xl border border-[#8c7ae6]/25 bg-[#f5f3ff] px-4 py-2.5 text-xs font-semibold text-[#8c7ae6] shadow-2xs">
+          <svg class="h-4 w-4 svg-spinner text-[#8c7ae6]" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span>Loading page configuration...</span>
+        </div>
+        }
+
+        <!-- PAGE CREATION / SCOPE CARD -->
+        <app-page-scope-form
+          [cities]="cities"
+          [availableBranches]="availableBranches"
+          [classes]="classes"
+          [(selectedCityId)]="selectedCityId"
+          (cityChanged)="onCityChange()"
+          [(selectedBranchId)]="selectedBranchId"
+          (branchChanged)="onBranchChange()"
+          [(selectedClassId)]="selectedClassId"
+          (classChanged)="onClassChange()"
+          [(pageTitle)]="pageTitle"
+          [(seoTitle)]="seoTitle"
+          [(seoDescription)]="seoDescription"
+          [(isIndexed)]="isIndexed"
+          [domainName]="domainName"
+          [generatedSlug]="generatedSlug"
+          [pageCreated]="pageCreated"
+          [selectedRevisionId]="selectedRevisionId"
+          [revisions]="revisions"
+          [canCreatePage]="canCreatePage"
+          [isCreatingPage]="isCreatingPage"
+          [isSavingMetadata]="isSavingMetadata"
+          (create)="createPage()"
+          (saveMetadata)="saveDraftMetadata()"
+          (discardDraft)="discardDraftRevision()"
+          (copyUrl)="copyPageUrl()"
+          (openUrl)="openPageUrl()"
+          (previewDraft)="previewDraft()"
+        />
+
+
+        <!-- PAGE CONFIGURATION (Compact 2-Column Grid) -->
+        @if (pageCreated) {
+
+        <section class="mt-4 grid gap-4 xl:grid-cols-[1fr_320px] items-start">
+
+          <!-- LEFT COLUMN -->
+          <div class="space-y-3.5 min-w-0">
+
+            <!-- CONFIG HEADER -->
+            <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs">
+
+              <div class="border-b border-slate-100 bg-white p-3.5 sm:p-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" (click)="togglePageStatus()" data-tooltip="Toggle page status"
+                        class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition border shadow-2xs hover:shadow-xs"
+                        [class.bg-emerald-50]="pageStatus === 'ACTIVE'"
+                        [class.border-emerald-200]="pageStatus === 'ACTIVE'"
+                        [class.text-emerald-700]="pageStatus === 'ACTIVE'"
+                        [class.bg-slate-100]="pageStatus !== 'ACTIVE'"
+                        [class.border-slate-200]="pageStatus !== 'ACTIVE'"
+                        [class.text-slate-600]="pageStatus !== 'ACTIVE'">
+                        <span class="h-2 w-2 rounded-full" [class.bg-emerald-500]="pageStatus === 'ACTIVE'"
+                          [class.bg-slate-400]="pageStatus !== 'ACTIVE'"></span>
+                        {{ pageStatus === 'ACTIVE' ? 'Active Page' : 'Inactive Page' }}
+                      </button>
+                      <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                        {{ pageType }}
+                      </span>
+                    </div>
+
+                    <h2 class="mt-1.5 text-base sm:text-lg font-bold tracking-tight text-slate-900">
+                      {{ pageTitle }}
+                    </h2>
+
+                    <div class="mt-1 flex items-center gap-2 font-mono text-xs text-slate-600">
+                      <span class="truncate max-w-md">{{ domainName }}{{ generatedSlug }}</span>
+                      <button type="button" (click)="openPageUrl()" data-tooltip="Open page in new tab"
+                        class="inline-flex items-center gap-1 font-sans font-bold text-xs text-[#8c7ae6] hover:text-[#7158e2] hover:underline">
+                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Open
+                      </button>
+                      <span class="text-slate-300">•</span>
+                      <button type="button" (click)="copyPageUrl()" data-tooltip="Copy link"
+                        class="font-sans font-bold text-xs text-[#8c7ae6] hover:text-[#7158e2] hover:underline">
+                        Copy
+                      </button>
+                      <span class="text-slate-300">•</span>
+                      <button type="button" (click)="previewDraft()" data-tooltip="Preview draft revision in Next.js"
+                        class="inline-flex items-center gap-1 font-sans font-bold text-xs text-amber-700 hover:text-amber-800 hover:underline">
+                        <svg class="h-3 w-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Preview Draft
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- ACTIVE SECTION SAVE CONTROLS -->
+                  <div class="flex items-center gap-2.5">
+                    @if (activeEditingSectionKey) {
+                    <div
+                      class="hidden sm:flex items-center gap-2 rounded-lg border border-indigo-200 bg-[#f5f3ff] px-3 py-1.5 text-xs font-semibold text-[#8c7ae6] shadow-2xs">
+                      <span class="h-2 w-2 rounded-full bg-[#8c7ae6] animate-pulse"></span>
+                      <span class="truncate max-w-[150px]">Editing: {{ getActiveSectionTitle() }}</span>
+                    </div>
+
+                    <button type="button" (click)="saveActiveSection()" [disabled]="savingSectionKey !== null"
+                      class="inline-flex h-9.5 items-center justify-center gap-2 rounded-lg bg-[#8c7ae6] px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-[#7158e2] disabled:opacity-50"
+                      title="Save {{ getActiveSectionTitle() }} section">
+                      @if (savingSectionKey !== null) {
+                      <svg class="h-4 w-4 svg-spinner text-white" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
+                        </path>
+                      </svg>
+                      Saving...
+                      } @else {
+                      <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Save {{ getActiveSectionTitle() }}
+                      }
+                    </button>
+                    }
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- SECTIONS ACCORDION -->
+              <div class="p-3 sm:p-5">
+
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                      <span>Page Sections</span>
+                      <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                        {{ sections.length }}
+                      </span>
+                    </h3>
+                    <p class="text-xs font-medium text-slate-500 mt-0.5">
+                      Enable or disable sections and customize content.
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                      {{ getActiveSectionsCount() }}/{{ sections.length }} Active
+                    </span>
+
+                    @if (activeEditingSectionKey) {
+                    <button type="button" (click)="closeAllSections()"
+                      class="text-xs font-semibold text-[#8c7ae6] hover:text-[#7158e2] px-2.5 py-1 rounded-lg hover:bg-[#f5f3ff] transition border border-transparent hover:border-indigo-100">
+                      Collapse all
+                    </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="space-y-2.5">
+
+                  @for (
+                  section of sections;
+                  track section.key
+                  ) {
+
+                  <div [id]="'section-accordion-' + section.key"
+                    class="rounded-xl border bg-white shadow-2xs overflow-hidden transition-all duration-200"
+                    [class.border-[#8c7ae6]]="activeEditingSectionKey === section.key"
+                    [class.ring-2]="activeEditingSectionKey === section.key"
+                    [class.ring-[#8c7ae6]/20]="activeEditingSectionKey === section.key"
+                    [class.shadow-md]="activeEditingSectionKey === section.key"
+                    [class.border-slate-200]="activeEditingSectionKey !== section.key"
+                    [class.hover:border-slate-300]="activeEditingSectionKey !== section.key">
+
+                    <div (click)="toggleSectionAccordion(section.key)"
+                      class="flex items-center justify-between gap-3 p-3.5 sm:p-4 cursor-pointer select-none transition-colors"
+                      [class.bg-[#f5f3ff]/50]="activeEditingSectionKey === section.key"
+                      [class.bg-white]="activeEditingSectionKey !== section.key"
+                      [class.hover:bg-slate-50/80]="activeEditingSectionKey !== section.key">
+
+                      <div class="flex min-w-0 items-center gap-3 sm:gap-3.5">
+
+                        <div
+                          class="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors shadow-2xs"
+                          [class.bg-[#8c7ae6]]="activeEditingSectionKey === section.key"
+                          [class.text-white]="activeEditingSectionKey === section.key"
+                          [class.bg-[#f5f3ff]]="activeEditingSectionKey !== section.key"
+                          [class.text-[#8c7ae6]]="activeEditingSectionKey !== section.key">
+                          {{ getSectionNumber(section.key) }}
+                        </div>
+
+                        <div class="min-w-0">
+
+                          <p class="truncate text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
+                            <span>{{ section.title }}</span>
+                            @if (activeEditingSectionKey === section.key) {
+                            <span
+                              class="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-[11px] font-bold text-[#8c7ae6]">
+                              <span class="h-1.5 w-1.5 rounded-full bg-[#8c7ae6] animate-pulse"></span>
+                              Editing
+                            </span>
+                            }
+                          </p>
+
+                          @if (section.description) {
+                          <p class="truncate text-xs font-normal text-slate-500 mt-0.5 max-w-sm sm:max-w-md hidden sm:block">
+                            {{ section.description }}
+                          </p>
+                          }
+
+                        </div>
+
+                      </div>
+
+                      <div class="flex items-center gap-2 sm:gap-3">
+                        <button type="button" (click)="$event.stopPropagation(); toggleSection(section)"
+                          class="rounded-xl border px-3 py-1.5 text-xs font-bold transition-all shadow-2xs inline-flex items-center gap-1.5"
+                          [class.border-emerald-200]="section.active" [class.bg-emerald-50]="section.active"
+                          [class.text-emerald-700]="section.active" [class.border-slate-200]="!section.active"
+                          [class.bg-slate-50]="!section.active" [class.text-slate-400]="!section.active"
+                          title="Toggle {{ section.title }} section on live page">
+                          <span class="h-1.5 w-1.5 rounded-full"
+                            [class.bg-emerald-500]="section.active"
+                            [class.bg-slate-400]="!section.active"></span>
+                          {{ section.active ? 'Active' : 'Inactive' }}
+                        </button>
+
+                        <div class="h-8 w-8 rounded-lg flex items-center justify-center transition-colors text-slate-400 hover:text-slate-600 hover:bg-slate-100/80">
+                          <svg class="h-4 w-4 transition-transform duration-300"
+                            [class.rotate-180]="activeEditingSectionKey === section.key" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                    </div>
+
+
+                    <!-- SECTION FORM (EXPANDED ACCORDION BODY) -->
+                    @if (activeEditingSectionKey === section.key) {
+
+                    <div class="border-t border-slate-100 p-4 sm:p-6 bg-white animate-fadeIn" (click)="$event.stopPropagation()">
+
+                      @if (section.key === 'header') {
+                      <app-header-section [logos]="logos" (logosChange)="logos = $event"
+                        [uploadMedia]="uploadLogoMedia" />
+                      }
+
+                      @if (section.key === 'banner') {
+                      <app-banner-section [banner]="banner" (bannerChange)="banner = $event" />
+                      }
+
+                      @if (section.key === 'classes') {
+                      <app-classes-section [classes]="classesConfig" (classesChange)="classesConfig = $event" />
+                      }
+
+                      @if (section.key === 'why-us') {
+                      <app-why-us [whyUs]="whyUs" (whyUsChange)="whyUs = $event" />
+                      }
+
+                      @if (section.key === 'course') {
+                      <app-course [course]="course" (courseChange)="course = $event" />
+                      }
+
+                      @if (section.key === 'facilities') {
+                      <app-facilities-section [facilities]="facilities" (facilitiesChange)="facilities = $event" />
+                      }
+
+                      @if (section.key === 'right-school') {
+                      <app-right-school [rightSchool]="rightSchool" (rightSchoolChange)="rightSchool = $event" />
+                      }
+
+                      @if (section.key === 'academic-results') {
+                      <app-academic-results [academicResults]="academicResults"
+                        (academicResultsChange)="academicResults = $event" />
+                      }
+
+                      @if (section.key === 'parents-say') {
+                      <app-parents-say [parentsSay]="parentsSay" (parentsSayChange)="parentsSay = $event" />
+                      }
+
+                      @if (section.key === 'image-section') {
+                      <app-image-section [imageSection]="imageSection" (imageSectionChange)="imageSection = $event" />
+                      }
+
+                      @if (section.key === 'faq') {
+                      <app-faq-section [faq]="faq" (faqChange)="faq = $event" />
+                      }
+
+                      @if (section.key === 'limited-seats') {
+                      <app-limited-seats-section [limitedSeats]="limitedSeatsConfig"
+                        (limitedSeatsChange)="onLimitedSeatsChange($event)" />
+                      }
+
+                      <!-- DEDICATED SECTION ACTION FOOTER -->
+                      <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 bg-slate-50/50 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 py-3 sm:px-6 rounded-b-xl">
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                          <svg class="h-4 w-4 text-[#8c7ae6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Save changes to draft revision for <strong>{{ section.title }}</strong></span>
+                        </div>
+
+                        <div class="flex items-center gap-2.5">
+                          <button type="button" (click)="toggleSectionAccordion(section.key)"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-2xs">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                            Collapse
+                          </button>
+
+                          <button type="button" (click)="saveSection(section.key)" [disabled]="savingSectionKey !== null"
+                            class="inline-flex items-center gap-2 rounded-lg bg-[#8c7ae6] px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-[#7158e2] disabled:opacity-50">
+                            @if (savingSectionKey === section.key) {
+                            <svg class="h-4 w-4 svg-spinner text-white" viewBox="0 0 24 24" fill="none">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Saving {{ section.title }}...
+                            } @else {
+                            <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save {{ section.title }}
+                            }
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    }
+
+                  </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- RIGHT COLUMN (REVISION & SUMMARY PANEL) -->
+          <app-page-revision-panel
+            [selectedRevisionId]="selectedRevisionId"
+            [revisions]="revisions"
+            [isPublishing]="isPublishing"
+            [isCreatingDraft]="isCreatingDraft"
+            [isUnpublishing]="isUnpublishing"
+            [hasPublishedRevision]="hasPublishedRevision"
+            [domainName]="domainName"
+            [generatedSlug]="generatedSlug"
+            [pageType]="pageType"
+            [sections]="sections"
+            [activeEditingSectionKey]="activeEditingSectionKey"
+            (revisionChanged)="onRevisionChange($event)"
+            (publish)="publishDraftRevision()"
+            (createDraft)="createDraftRevision()"
+            (clonePage)="openCloneModal()"
+            (unpublishPage)="confirmUnpublishPage()"
+            (discardDraft)="discardDraftRevision()"
+            (copyUrl)="copyPageUrl()"
+            (openUrl)="openPageUrl()"
+            (previewDraft)="previewDraft()"
+            (selectSection)="setActiveEditingSection($event)"
+          />
+
+
+
+
+
+
+        </section>
+
+        }
+
+      </div>
+
+      <!-- CONFIRMATION MODAL -->
+      @if (showUnpublishModal) {
+      <app-confirm-delete-modal
+        title="Unpublish Dynamic Page?"
+        message="Are you sure you want to unpublish this page? The currently published revision will be archived, and public URLs for this scope will return 404."
+        noticeText="Unpublishing archives the published version and returns 404 for public URLs."
+        [isDeleting]="isUnpublishing"
+        (cancelled)="showUnpublishModal = false"
+        (confirmed)="unpublishPage()"
+      />
+      }
+
+      <!-- WORKFLOW CONFIRMATION MODAL (Publish, Discard, Switch Draft) -->
+      @if (confirmModal.show) {
+      <div class="fixed inset-0 z-10000 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in duration-150">
+        <div class="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-2xl">
+          <div class="flex items-start gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              [class.bg-emerald-50]="!confirmModal.danger"
+              [class.text-emerald-600]="!confirmModal.danger"
+              [class.bg-rose-50]="confirmModal.danger"
+              [class.text-rose-600]="confirmModal.danger">
+              @if (confirmModal.danger) {
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              } @else {
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              }
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">{{ confirmModal.title }}</h3>
+              <p class="mt-1.5 text-xs text-slate-600 leading-relaxed">{{ confirmModal.message }}</p>
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center justify-end gap-2.5">
+            <button type="button" (click)="confirmModal.show = false" [disabled]="isPublishing"
+              class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+              {{ confirmModal.cancelText || 'Cancel' }}
+            </button>
+            <button type="button" (click)="confirmModal.action()" [disabled]="isPublishing"
+              class="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-xs transition disabled:opacity-50"
+              [class.bg-emerald-600]="!confirmModal.danger"
+              [class.hover:bg-emerald-700]="!confirmModal.danger"
+              [class.bg-rose-600]="confirmModal.danger"
+              [class.hover:bg-rose-700]="confirmModal.danger">
+              @if (isPublishing) {
+              <svg class="h-3.5 w-3.5 svg-spinner text-white" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <span>Publishing...</span>
+              } @else {
+              <span>{{ confirmModal.confirmText || 'Confirm' }}</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- CLONE PAGE MODAL -->
+      <app-clone-page-modal
+        [isOpen]="isCloneModalOpen"
+        [sourcePage]="editingPageId !== null ? { id: editingPageId, title: pageTitle, cityId: selectedCityId, branchId: selectedBranchId, classId: selectedClassId } : null"
+        [sourceRevisionId]="selectedRevisionId"
+        [revisions]="revisions"
+        [cities]="cities"
+        [branches]="branches"
+        [classes]="classes"
+        (close)="isCloneModalOpen = false"
+        (cloned)="onPageCloned($event)"
+      />
+
+    </main>
+  </div>
+</div>

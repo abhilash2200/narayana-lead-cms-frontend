@@ -1,0 +1,404 @@
+<div class="space-y-6">
+
+  <!-- Visibility Controls -->
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900">
+          Section Visibility
+        </h3>
+
+        <p class="mt-1 text-xs text-slate-500">
+          Choose where this section should be visible.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+
+        <!-- Desktop Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="classes.desktopActive" (click)="toggleDesktop()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Desktop
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="classes.desktopActive" [class.bg-slate-300]="!classes.desktopActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="classes.desktopActive" [class.translate-x-0]="!classes.desktopActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ classes.desktopActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+        <!-- Mobile Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="classes.mobileActive" (click)="toggleMobile()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Mobile
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="classes.mobileActive" [class.bg-slate-300]="!classes.mobileActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="classes.mobileActive" [class.translate-x-0]="!classes.mobileActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ classes.mobileActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Section Heading -->
+    <div class="grid gap-5 md:grid-cols-2">
+
+      <!-- Section Heading -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Heading
+        </label>
+
+        <input type="text" [(ngModel)]="classes.sectionHeading" (ngModelChange)="emitChange()"
+          placeholder="Explore Our Classes"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+      <!-- Section Sub Heading -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Sub Heading
+        </label>
+
+        <input type="text" [(ngModel)]="classes.sectionSubHeading" (ngModelChange)="emitChange()"
+          placeholder="Choose the right programme for your child"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+    </div>
+
+    <!-- Class Cards Header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-base font-semibold text-slate-900">
+          Class Cards
+        </h3>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Add and manage individual class cards.
+        </p>
+      </div>
+
+      <button type="button" (click)="addClass()"
+        class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+        + Add Class
+      </button>
+
+    </div>
+
+    <!-- Class Cards -->
+    <div class="space-y-3">
+
+      @for (
+      card of classes.cards;
+      track card.id
+      ) {
+
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+
+        <!-- Card Header -->
+        <div (click)="toggleCard(card.id)"
+          class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between cursor-pointer select-none hover:bg-slate-100/70 transition">
+
+          <div class="flex min-w-0 items-center gap-3">
+
+            <!-- Number -->
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-bold text-slate-600">
+              {{ $index + 1 }}
+            </div>
+
+            <!-- Card Info -->
+            <div class="min-w-0">
+
+              <h4 class="truncate text-sm font-semibold text-slate-900">
+                {{
+                card.heading ||
+                'Untitled Class'
+                }}
+              </h4>
+
+              <p class="mt-0.5 text-xs text-slate-500">
+                Class Card #{{ $index + 1 }}
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+
+            <!-- Remove -->
+            <button type="button" (click)="$event.stopPropagation(); removeClass(card.id)"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+              Remove
+            </button>
+
+            <!-- Arrow Indicator -->
+            <div class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+              <svg class="h-4 w-4 transition-transform duration-200" [class.rotate-180]="isCardOpen(card.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Card Content -->
+        @if (isCardOpen(card.id)) {
+
+        <div class="border-t border-slate-200 bg-white p-5 animate-fadeIn">
+
+          <div class="space-y-5">
+
+            <!-- Image -->
+            <app-image-upload label="Class Card Image" description="Drag & drop class image here or click to browse"
+              [imagePreview]="card.image"
+              [mediaId]="card.mediaId"
+              (imageChange)="onCardImageChange(card.id, $event)"
+              (mediaIdChange)="onCardMediaIdChange(card.id, $event)" />
+
+            <!-- Heading + Sub Heading -->
+            <div class="grid gap-5 md:grid-cols-2">
+
+              <!-- Heading -->
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                  Heading
+                </label>
+
+                <input type="text" [(ngModel)]="card.heading" (ngModelChange)="emitChange()" placeholder="Class 5"
+                  class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+              </div>
+
+              <!-- Sub Heading -->
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                  Sub Heading
+                </label>
+
+                <input type="text" [(ngModel)]="card.subHeading" (ngModelChange)="emitChange()"
+                  placeholder="Foundation Programme"
+                  class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+              </div>
+
+            </div>
+
+            <!-- H3 Heading -->
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                H3 Heading
+              </label>
+
+              <input type="text" [(ngModel)]="card.h3Heading" (ngModelChange)="emitChange()"
+                placeholder="What Students Learn"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+            </div>
+
+            <!-- List Items -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div
+                class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                  <h4 class="text-sm font-semibold text-slate-900">
+                    List Items
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Add points that will appear inside this class card.
+                  </p>
+                </div>
+
+                <button type="button" (click)="addListItem(card.id)"
+                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
+                  + Add Point
+                </button>
+
+              </div>
+
+              <div class="mt-4 space-y-2">
+
+                @for (
+                item of card.listItems;
+                track item.id
+                ) {
+
+                <div class="flex items-center gap-2">
+
+                  <!-- Number -->
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-bold text-slate-500">
+                    {{ $index + 1 }}
+                  </div>
+
+                  <!-- Point -->
+                  <input type="text" [(ngModel)]="item.text" (ngModelChange)="emitChange()" placeholder="Mathematics"
+                    class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+                  <!-- Remove Point -->
+                  <button type="button" (click)="removeListItem(card.id, item.id)"
+                    [disabled]="card.listItems.length <= 1"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-200 bg-white text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label="Remove list item">
+                    ×
+                  </button>
+
+                </div>
+
+                }
+
+              </div>
+
+            </div>
+
+            <!-- Card Buttons -->
+            <div>
+
+              <div class="mb-4 border-b border-slate-200 pb-4">
+                <h4 class="text-sm font-semibold text-slate-900">
+                  Card Buttons
+                </h4>
+
+                <p class="mt-1 text-xs text-slate-500">
+                  Configure the two buttons displayed on this class card.
+                </p>
+              </div>
+
+              <div class="grid gap-5 md:grid-cols-2">
+
+                <!-- Button 1 -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                  <h5 class="mb-4 text-sm font-semibold text-slate-800">
+                    Button 1
+                  </h5>
+
+                  <div class="space-y-4">
+
+                    <!-- Button Text -->
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button Text
+                      </label>
+
+                      <input type="text" [(ngModel)]="card.button1Text" (ngModelChange)="emitChange()"
+                        placeholder="Explore"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                    <!-- Button URL -->
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button URL
+                      </label>
+
+                      <input type="text" [(ngModel)]="card.button1Url" (ngModelChange)="emitChange()"
+                        placeholder="/classes/class-5"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <!-- Button 2 -->
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+                  <h5 class="mb-4 text-sm font-semibold text-slate-800">
+                    Button 2
+                  </h5>
+
+                  <div class="space-y-4">
+
+                    <!-- Button Text -->
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button Text
+                      </label>
+
+                      <input type="text" [(ngModel)]="card.button2Text" (ngModelChange)="emitChange()"
+                        placeholder="Apply Now"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                    <!-- Button URL -->
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button URL
+                      </label>
+
+                      <input type="text" [(ngModel)]="card.button2Url" (ngModelChange)="emitChange()"
+                        placeholder="/admission"
+                        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        }
+
+      </div>
+
+      }
+
+      <!-- Empty State -->
+      @if (classes.cards.length === 0) {
+
+      <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+
+        <h4 class="text-sm font-semibold text-slate-800">
+          No class cards added
+        </h4>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Click "Add Class" to create your first class card.
+        </p>
+
+        <button type="button" (click)="addClass()"
+          class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          + Add Class
+        </button>
+
+      </div>
+
+      }
+
+    </div>
+
+  </div>

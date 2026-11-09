@@ -1,0 +1,128 @@
+<div class="space-y-3">
+  <!-- LABEL -->
+  @if (label) {
+  <div>
+    <p class="text-xs font-semibold text-slate-700">
+      {{ label }}
+    </p>
+
+    @if (description) {
+    <p class="mt-1 text-[11px] text-slate-400">
+      {{ description }}
+    </p>
+    }
+  </div>
+  }
+
+  <!-- ERROR MESSAGE -->
+  @if (errorMessage) {
+  <div
+    class="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-600">
+    <span>{{ errorMessage }}</span>
+    <button type="button" (click)="errorMessage = ''" class="text-red-400 hover:text-red-600 font-bold ml-2">
+      ✕
+    </button>
+  </div>
+  }
+
+  <!-- DROP AREA -->
+  <div class="relative overflow-hidden rounded-lg border-2 border-dashed transition"
+    [class.border-indigo-400]="isDragging" [class.bg-indigo-50]="isDragging" [class.border-slate-200]="!isDragging"
+    [class.bg-slate-50/70]="!isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)">
+
+    <!-- UPLOADING / HYDRATING OVERLAY -->
+    @if (isUploading || isHydrating) {
+    <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/90 backdrop-blur-xs">
+      <svg class="h-6 w-6 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+        </path>
+      </svg>
+      <span class="mt-2 text-xs font-semibold text-indigo-600">{{ isHydrating ? 'Loading image...' : 'Uploading to server...' }}</span>
+    </div>
+    }
+
+    <!-- IMAGE PREVIEW -->
+    @if (imagePreview) {
+    <div class="relative bg-slate-900/5 flex items-center justify-center p-2">
+      <img [src]="imagePreview" alt="Uploaded image" class="max-h-36 w-auto object-contain rounded-lg" />
+
+      <!-- OVERLAY -->
+      <div
+        class="absolute inset-0 flex items-center justify-center bg-slate-950/60 opacity-0 transition hover:opacity-100 rounded-lg">
+        <div class="flex gap-2">
+          <label
+            class="cursor-pointer rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-xs hover:bg-slate-100 transition">
+            Change
+            <input type="file" accept="image/*" class="hidden" [disabled]="isUploading"
+              (change)="onFileSelected($event)" />
+          </label>
+
+          <button type="button" (click)="removeImage()" [disabled]="isUploading"
+            class="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-red-600 transition">
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <!-- EMPTY DROP AREA -->
+    <label
+      class="flex min-h-28 cursor-pointer flex-col items-center justify-center px-4 py-4 text-center hover:bg-indigo-50/20 transition">
+      <!-- ICON -->
+      <div
+        class="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-xs border border-slate-100">
+        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </div>
+
+      <p class="mt-2 text-xs font-semibold text-slate-800">
+        Drag & Drop image <span class="font-normal text-slate-500">or</span> <span
+          class="text-indigo-600 underline font-semibold">browse</span>
+      </p>
+
+      <p class="mt-0.5 text-xs text-slate-500 font-medium">
+        JPG, PNG, WEBP, SVG · Max 5MB
+      </p>
+
+      <input type="file" accept="image/*" class="hidden" [disabled]="isUploading"
+        (change)="onFileSelected($event)" />
+    </label>
+    }
+  </div>
+
+  <!-- FILE INFO & MEDIA BADGE -->
+  @if (selectedFileName || mediaId) {
+  <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+    <div class="min-w-0">
+      <p class="truncate text-xs font-semibold text-slate-800">
+        {{ selectedFileName || (imagePreview ? 'Image loaded' : 'No file name') }}
+      </p>
+
+      @if (selectedFileSize) {
+      <p class="mt-0.5 text-xs text-slate-500">
+        {{ selectedFileSize }}
+      </p>
+      }
+    </div>
+
+    @if (isUploading) {
+    <span class="ml-3 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+      Uploading...
+    </span>
+    } @else if (mediaId) {
+    <span class="ml-3 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
+      Media #{{ mediaId }}
+    </span>
+    } @else {
+    <span class="ml-3 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+      Ready
+    </span>
+    }
+  </div>
+  }
+</div>

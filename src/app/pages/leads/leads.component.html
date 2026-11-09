@@ -1,0 +1,810 @@
+<div class="min-h-screen bg-slate-100 text-slate-900">
+  <app-sidebar></app-sidebar>
+
+  <div class="lg:ml-[230px]">
+    <app-topbar title="Leads" subtitle="Lead Tracking & Management"></app-topbar>
+
+    <main class="p-4 sm:p-5">
+
+      <!-- HEADER & MODULE SELECTOR -->
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-slate-950">Leads</h1>
+          <p class="mt-0.5 text-xs text-slate-500">
+            Manage and view leads from your landing pages and modules.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="module-select" class="text-xs font-semibold text-slate-700 whitespace-nowrap">
+            Select Module:
+          </label>
+          <div class="relative min-w-[220px]">
+            <select id="module-select" [(ngModel)]="selectedModuleKey" (ngModelChange)="onModuleChange()"
+              [disabled]="isLoadingModules"
+              class="h-9 w-full appearance-none rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs font-semibold text-slate-800 shadow-xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 disabled:opacity-50">
+              <option value="">-- Choose Lead Module --</option>
+              @for (mod of modules; track mod.key) {
+              <option [value]="mod.key">{{ mod.label }}</option>
+              }
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+              <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOAD ERROR BANNER -->
+      @if (loadError) {
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-medium text-red-700">
+        {{ loadError }}
+      </div>
+      }
+
+      <!-- NO MODULE SELECTED STATE -->
+      @if (!selectedModuleKey) {
+      <div
+        class="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white py-16 text-center shadow-xs">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 mb-3">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-slate-900">Select a Lead Module First</h3>
+        <p class="mt-1 max-w-sm text-xs text-slate-500">
+          Please select a module from the dropdown above to load and display leads data.
+        </p>
+      </div>
+      } @else {
+
+      <!-- LEADS TABLE & FILTERS CARD -->
+      <section class="relative z-10 rounded-lg border border-slate-200 bg-white shadow-xs">
+        <div class="border-b border-slate-100 p-4 relative z-20">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-1 flex-wrap items-center gap-2.5">
+              
+              <!-- SEARCH INPUT -->
+              <div class="relative min-w-[190px] flex-1 sm:max-w-[210px]">
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchInput($event)"
+                  placeholder="Search leads (name, phone)..."
+                  class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-8 pr-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900" />
+                <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <!-- EXCLUDE SEARCH INPUT -->
+              <div class="relative min-w-[170px] flex-1 sm:max-w-[190px]">
+                <input type="text" [(ngModel)]="excludeSearchTerm" (ngModelChange)="onExcludeSearchInput($event)"
+                  placeholder="Exclude (name, phone)..."
+                  title="Exclude leads containing this name or phone"
+                  class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-8 pr-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:bg-white focus:ring-1 focus:ring-red-400" />
+                <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+
+              <!-- RANGE CALENDAR DATE PICKER -->
+              <app-date-range-picker
+                [startDate]="dateFrom"
+                [endDate]="dateTo"
+                (rangeChange)="onDateRangeChange($event)"
+                (startDateChange)="dateFrom = $event"
+                (endDateChange)="dateTo = $event" />
+
+              <!-- OTP STATUS FILTER -->
+              <div class="relative inline-flex items-center">
+                <select [(ngModel)]="backendFilters.otp_validation" (ngModelChange)="onBackendFilterChange()"
+                  class="h-8.5 appearance-none rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
+                  <option value="">OTP: All</option>
+                  <option value="VALID">OTP: Valid</option>
+                  <option value="INVALID">OTP: Invalid</option>
+                </select>
+                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              <!-- CITY FILTER -->
+              @if (cityOptions.length > 0) {
+              <div class="relative inline-flex items-center">
+                <select [(ngModel)]="backendFilters.city" (ngModelChange)="onBackendFilterChange()"
+                  class="h-8.5 max-w-[130px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
+                  <option value="">City: All</option>
+                  @for (c of cityOptions; track c) {
+                  <option [value]="c">{{ c }}</option>
+                  }
+                </select>
+                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              }
+
+              <!-- BRANCH FILTER -->
+              @if (branchOptions.length > 0) {
+              <div class="relative inline-flex items-center">
+                <select [(ngModel)]="backendFilters.branch" (ngModelChange)="onBackendFilterChange()"
+                  class="h-8.5 max-w-[140px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
+                  <option value="">Branch: All</option>
+                  @for (b of branchOptions; track b) {
+                  <option [value]="b">{{ b }}</option>
+                  }
+                </select>
+                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              }
+
+              <!-- CLASS FILTER -->
+              @if (classOptions.length > 0) {
+              <div class="relative inline-flex items-center">
+                <select [(ngModel)]="backendFilters.class" (ngModelChange)="onBackendFilterChange()"
+                  class="h-8.5 max-w-[130px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
+                  <option value="">Class: All</option>
+                  @for (cls of classOptions; track cls) {
+                  <option [value]="cls">{{ cls }}</option>
+                  }
+                </select>
+                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              }
+
+              <!-- MORE FILTERS TOGGLE BUTTON -->
+              <button type="button" (click)="toggleMoreFilters()"
+                [class.bg-indigo-50]="showMoreFilters || activeAdvancedFilterCount > 0"
+                [class.border-indigo-300]="showMoreFilters || activeAdvancedFilterCount > 0"
+                [class.text-indigo-700]="showMoreFilters || activeAdvancedFilterCount > 0"
+                [class.bg-white]="!showMoreFilters && activeAdvancedFilterCount === 0"
+                [class.border-slate-200]="!showMoreFilters && activeAdvancedFilterCount === 0"
+                [class.text-slate-600]="!showMoreFilters && activeAdvancedFilterCount === 0"
+                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold shadow-2xs transition hover:bg-slate-50">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span>More Filters</span>
+                @if (activeAdvancedFilterCount > 0) {
+                  <span class="rounded-full bg-indigo-600 text-white px-1.5 py-0.2 text-[10px] font-bold">
+                    {{ activeAdvancedFilterCount }}
+                  </span>
+                }
+              </button>
+
+              <!-- RESET BUTTON -->
+              @if (hasActiveFilters) {
+              <button type="button" (click)="resetFilters()"
+                class="inline-flex h-8.5 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-800">
+                <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>Reset</span>
+              </button>
+              }
+            </div>
+
+            <!-- ACTIONS (ROWS, COLUMNS, EXPORT) -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-medium text-slate-400">Rows:</span>
+                <select [(ngModel)]="perPage" (ngModelChange)="onPerPageChange()"
+                  class="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none">
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="25">25</option>
+                  <option [ngValue]="50">50</option>
+                  <option [ngValue]="100">100</option>
+                </select>
+              </div>
+
+              <!-- COLUMNS DROPDOWN -->
+              <div id="columns-dropdown-wrapper" class="relative">
+                <button type="button" (click)="isColumnsDropdownOpen = !isColumnsDropdownOpen"
+                  class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50">
+                  <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  Columns
+                  <span class="rounded-full bg-slate-100 px-1.5 py-0.2 text-[10px] font-bold text-slate-600">
+                    {{ visibleColumnCount }}
+                  </span>
+                </button>
+
+                @if (isColumnsDropdownOpen) {
+                <div
+                  class="absolute right-0 z-30 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
+                  
+                  <!-- HEADER -->
+                  <div class="border-b border-slate-100 bg-slate-50/70 px-3 py-2 flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-xs font-bold text-slate-800">Customize Columns</div>
+                      <div class="text-[10px] text-slate-400 truncate">Drag to reorder • Check to toggle</div>
+                    </div>
+                    <span class="inline-flex shrink-0 items-center whitespace-nowrap rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 border border-indigo-100/80">
+                      {{ visibleColumnCount }} visible
+                    </span>
+                  </div>
+
+                  <!-- QUICK ACTIONS -->
+                  <div class="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 bg-white text-[11px]">
+                    <div class="flex items-center gap-2">
+                      <button type="button" (click)="toggleAllColumns(true)" class="font-semibold text-indigo-600 hover:text-indigo-800 transition">
+                        Show all
+                      </button>
+                      <span class="text-slate-300">•</span>
+                      <button type="button" (click)="toggleAllColumns(false)" class="font-semibold text-slate-500 hover:text-slate-700 transition">
+                        Hide all
+                      </button>
+                    </div>
+                    <button type="button" (click)="resetColumnOrder()" class="text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition" title="Reset to original column order">
+                      Reset order
+                    </button>
+                  </div>
+
+                  <!-- DRAGGABLE COLUMN LIST -->
+                  <div class="max-h-80 overflow-y-auto p-1.5 space-y-1">
+                    @for (col of columns; track col.key; let idx = $index) {
+                    <div
+                      draggable="true"
+                      (dragstart)="onColumnDragStart($event, idx)"
+                      (dragover)="onColumnDragOver($event, idx)"
+                      (dragleave)="onColumnDragLeave($event, idx)"
+                      (drop)="onColumnDrop($event, idx)"
+                      (dragend)="onColumnDragEnd()"
+                      class="group/item flex items-center justify-between gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition select-none"
+                      [class.bg-indigo-50]="dragOverColIndex === idx"
+                      [class.border-indigo-400]="dragOverColIndex === idx"
+                      [class.ring-2]="dragOverColIndex === idx"
+                      [class.ring-indigo-200]="dragOverColIndex === idx"
+                      [class.opacity-40]="draggedColIndex === idx"
+                      [class.border-dashed]="draggedColIndex === idx"
+                      [class.bg-white]="dragOverColIndex !== idx && col.visible"
+                      [class.border-slate-200]="dragOverColIndex !== idx && col.visible"
+                      [class.bg-slate-50/70]="dragOverColIndex !== idx && !col.visible"
+                      [class.border-slate-100]="dragOverColIndex !== idx && !col.visible"
+                      [class.hover:border-slate-300]="dragOverColIndex !== idx">
+
+                      <!-- LEFT: DRAG HANDLE + CHECKBOX + LABEL -->
+                      <div class="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing">
+                        <!-- DRAG HANDLE ICON -->
+                        <span class="text-slate-400 group-hover/item:text-slate-700 transition cursor-grab active:cursor-grabbing shrink-0" title="Drag to reorder">
+                          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="8" cy="6" r="1.5"/>
+                            <circle cx="16" cy="6" r="1.5"/>
+                            <circle cx="8" cy="12" r="1.5"/>
+                            <circle cx="16" cy="12" r="1.5"/>
+                            <circle cx="8" cy="18" r="1.5"/>
+                            <circle cx="16" cy="18" r="1.5"/>
+                          </svg>
+                        </span>
+
+                        <!-- CHECKBOX -->
+                        <input type="checkbox" [checked]="col.visible" (change)="toggleColumn(col.key)" (click)="$event.stopPropagation()"
+                          class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+
+                        <!-- LABEL -->
+                        <span class="truncate font-medium text-xs" [class.text-slate-800]="col.visible" [class.text-slate-400]="!col.visible">
+                          {{ col.label }}
+                        </span>
+                      </div>
+
+                      <!-- RIGHT: UP/DOWN BUTTONS (FOR QUICK/ACCESSIBLE REORDERING) -->
+                      <div class="flex items-center gap-0.5 shrink-0 opacity-60 group-hover/item:opacity-100 transition">
+                        <button type="button" (click)="moveColumn(idx, 'up', $event)" [disabled]="idx === 0"
+                          class="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition"
+                          title="Move column up">
+                          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <button type="button" (click)="moveColumn(idx, 'down', $event)" [disabled]="idx === columns.length - 1"
+                          class="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition"
+                          title="Move column down">
+                          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
+
+                    </div>
+                    }
+                  </div>
+
+                  <!-- FOOTER: RESET WIDTHS -->
+                  <div class="border-t border-slate-100 bg-slate-50/50 p-2">
+                    <button type="button" (click)="resetColWidths()"
+                      class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-600 shadow-2xs hover:bg-slate-50 hover:text-slate-900 transition">
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Reset Column Widths
+                    </button>
+                  </div>
+
+                </div>
+                }
+              </div>
+
+              <!-- EXPORT CSV BUTTON -->
+              <button type="button" (click)="exportCsv()" [disabled]="isExporting || leads.length === 0"
+                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white shadow-2xs transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40">
+                @if (isExporting) {
+                <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Exporting...
+                } @else {
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 3v12"></path>
+                  <path d="m7 10 5 5 5-5"></path>
+                  <path d="M5 21h14"></path>
+                </svg>
+                Export
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADVANCED FILTERS PANEL (DYNAMICALLY RENDERS ALL BACKEND FILTER OPTIONS & EXACT DUPLICATE SEARCH) -->
+        @if (showMoreFilters) {
+        <div class="border-t border-slate-200/80 bg-slate-50/80 px-4 py-3 space-y-3">
+          
+          <!-- ATTRIBUTE DROPDOWNS -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mr-1">Attribute Filters:</span>
+
+            @for (grp of advancedFilterGroups; track grp.key) {
+            <div class="relative inline-flex items-center">
+              <select [(ngModel)]="backendFilters[grp.key]" (ngModelChange)="onBackendFilterChange()"
+                class="h-8 max-w-[160px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 focus:border-[#8c7ae6]"
+                [title]="grp.label">
+                <option value="">{{ grp.label }}: All</option>
+                @for (opt of grp.options; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+              <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            }
+
+            @if (advancedFilterGroups.length === 0) {
+              <span class="text-xs text-slate-400 italic">No additional attribute dropdowns available for this module.</span>
+            }
+          </div>
+
+          <!-- EXACT DUPLICATE SEARCH (NAME / PHONE) -->
+          <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-200/60">
+            <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <svg class="h-3.5 w-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/>
+                <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/>
+              </svg>
+              <span>Exact Duplicate Match:</span>
+            </div>
+
+            <div class="relative min-w-[180px] max-w-[210px]">
+              <input type="text" [(ngModel)]="exactName" (ngModelChange)="onExactDuplicateFilterChange()"
+                placeholder="Exact Name (case-sensitive)..."
+                title="Exact stored Name match"
+                class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20" />
+            </div>
+
+            <div class="relative min-w-[160px] max-w-[190px]">
+              <input type="text" [(ngModel)]="exactPhone" (ngModelChange)="onExactDuplicateFilterChange()"
+                placeholder="Exact Phone (e.g. 9876543210)..."
+                title="Exact stored Phone match"
+                class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20" />
+            </div>
+
+            <span class="text-[11px] text-slate-400 italic">Returns newest row with duplicate count badge</span>
+
+            @if (activeAdvancedFilterCount > 0) {
+            <div class="ml-auto">
+              <button type="button" (click)="resetAdvancedFilters(); onBackendFilterChange()"
+                class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                Clear advanced filters
+              </button>
+            </div>
+            }
+          </div>
+
+        </div>
+        }
+
+        <!-- LEADS DATA TABLE -->
+        <div class="overflow-x-auto">
+          <table class="w-max min-w-full table-fixed border-collapse text-left">
+            <thead class="border-b border-slate-200 bg-slate-50">
+              <tr>
+                @for (col of visibleColumns; track col.key) {
+                <th [style.width.px]="colWidths[col.key]" [style.minWidth.px]="colWidths[col.key]"
+                  (click)="isSortable(col.key) && toggleSort(col.key)"
+                  [class.cursor-pointer]="isSortable(col.key)"
+                  [class.bg-indigo-50/70]="sortKey === col.key"
+                  [class.text-indigo-900]="sortKey === col.key"
+                  class="relative group/th select-none px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 overflow-hidden text-ellipsis whitespace-nowrap border-r border-slate-200/60 transition-colors"
+                  [attr.title]="isSortable(col.key) ? ('Click to sort by ' + col.label) : col.label">
+                  <div class="flex items-center justify-between gap-1 pr-1.5">
+                    <span class="truncate">{{ col.label }}</span>
+                    @if (sortKey === col.key) {
+                      @if (sortOrder === 'asc') {
+                        <svg class="h-3 w-3 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                      } @else if (sortOrder === 'desc') {
+                        <svg class="h-3 w-3 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      }
+                    } @else if (isSortable(col.key)) {
+                      <svg class="h-3 w-3 text-slate-300 opacity-0 group-hover/th:opacity-100 shrink-0 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                    }
+                  </div>
+                  <div
+                    class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize flex justify-end items-center group-hover/th:bg-slate-300/30 hover:!bg-indigo-500 z-10 transition-colors"
+                    (mousedown)="onResizeStart($event, col.key)" title="Drag to resize">
+                    <div class="w-0.5 h-3 bg-slate-300 group-hover/th:bg-slate-400"></div>
+                  </div>
+                </th>
+                }
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-slate-100">
+              @if (isLoadingLeads) {
+              @for (row of skeletonRows; track $index) {
+              <tr class="animate-pulse">
+                @for (col of visibleColumns; track col.key) {
+                <td class="px-2.5 py-2">
+                  <div class="h-4 w-full max-w-[80px] rounded bg-slate-200"></div>
+                </td>
+                }
+              </tr>
+              }
+              } @else if (leads.length === 0) {
+              <tr>
+                <td [attr.colspan]="visibleColumnCount" class="py-12 text-center">
+                  <div class="flex flex-col items-center justify-center">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-2">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-700">No leads found</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Try adjusting your filters, search term, or date range.</p>
+                    @if (hasActiveFilters) {
+                      <button type="button" (click)="resetFilters()"
+                        class="mt-3 inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-[#7158e2] hover:bg-indigo-100 transition">
+                        Reset all filters
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+              } @else {
+              @for (lead of displayedLeads; track lead.id; let rowIndex = $index) {
+              <tr (click)="openLeadDetail(lead)" class="group transition-colors duration-150 hover:bg-indigo-50/40 cursor-pointer">
+                @for (col of visibleColumns; track col.key) {
+                @switch (col.key) {
+                @case ('sno') {
+                <td class="whitespace-nowrap px-2.5 py-1.5 text-center text-xs font-semibold text-slate-400">
+                  {{ getSerialNumber(rowIndex) }}
+                </td>
+                }
+                @case ('id') {
+                <td class="px-2.5 py-1.5">
+                  <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-[11px] font-bold text-slate-700 group-hover:bg-indigo-100 group-hover:text-indigo-800 transition">
+                    #{{ lead.id }}
+                  </span>
+                </td>
+                }
+                @case ('entrydate') {
+                <td class="whitespace-nowrap px-2.5 py-1.5 text-xs font-medium text-slate-600">
+                  {{ lead.entrydate || '—' }}
+                </td>
+                }
+                @case ('name') {
+                <td class="whitespace-nowrap px-2.5 py-1.5 text-[13px] font-semibold text-slate-800">
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ lead.name || '—' }}</span>
+                    @if (lead.duplicate_count && lead.duplicate_count > 1) {
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-amber-700"
+                        [title]="lead.duplicate_count + ' duplicate records found for this exact match'">
+                        <svg class="h-2.5 w-2.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/>
+                          <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/>
+                        </svg>
+                        {{ lead.duplicate_count }} dups
+                      </span>
+                    }
+                  </div>
+                </td>
+                }
+                @case ('phone') {
+                <td class="whitespace-nowrap px-2.5 py-1.5 text-[13px] font-medium text-slate-700">
+                  <span>{{ lead.phone || '—' }}</span>
+                </td>
+                }
+                @case ('parent_email') {
+                <td class="px-2.5 py-1.5 overflow-hidden">
+                  <p class="truncate text-[13px] text-slate-600" [title]="lead.parent_email">
+                    {{ lead.parent_email || '—' }}
+                  </p>
+                </td>
+                }
+                @case ('otp_validation') {
+                <td class="whitespace-nowrap px-2.5 py-1.5">
+                  @if (lead.otp_validation === 'VALID' || lead.otp_validation === 'Valid' || lead.otp_validation === 'Verified' || lead.otp_validation === '1') {
+                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> VALID
+                  </span>
+                  } @else {
+                  <span class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-600">
+                    <span class="h-1.5 w-1.5 rounded-full bg-orange-500"></span> {{ lead.otp_validation || 'INVALID' }}
+                  </span>
+                  }
+                </td>
+                }
+                @case ('utm_source') {
+                <td class="whitespace-nowrap px-2.5 py-1.5">
+                  @if (lead.utm_source) {
+                  <span class="rounded bg-slate-100 px-1 py-0.5 text-[11px] font-medium text-slate-700">
+                    {{ lead.utm_source }}
+                  </span>
+                  } @else {
+                  <span class="text-[13px] text-slate-400">—</span>
+                  }
+                </td>
+                }
+                @default {
+                <td class="whitespace-nowrap px-2.5 py-1.5 text-[13px] text-slate-600">
+                  {{ getCellValue(lead, col.key) }}
+                </td>
+                }
+                }
+                }
+              </tr>
+              }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION BAR -->
+        @if (leads.length > 0) {
+        <div
+          class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-white px-4 py-3 sm:flex-row">
+          <p class="text-xs font-medium text-slate-500">
+            Showing
+            <span class="font-bold text-slate-800">{{ (currentPage - 1) * perPage + 1 }}</span>
+            to
+            <span class="font-bold text-slate-800">{{ (currentPage - 1) * perPage + leads.length }}</span>
+            of
+            <span class="font-bold text-slate-800">{{ meta.filtered || meta.total }}</span>
+            leads
+          </p>
+
+          <div class="flex items-center gap-1">
+            <button type="button" (click)="goToPage(currentPage - 1)" [disabled]="currentPage <= 1"
+              class="inline-flex h-7.5 w-7.5 items-center justify-center rounded border border-slate-200 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+              ‹
+            </button>
+
+            @for (p of cachedDisplayedPages; track p) {
+            <button type="button" (click)="goToPage(p)"
+              class="inline-flex h-7.5 min-w-[30px] px-2 items-center justify-center rounded text-xs font-semibold transition"
+              [ngClass]="p === currentPage ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'">
+              {{ p }}
+            </button>
+            }
+
+            <button type="button" (click)="goToPage(currentPage + 1)"
+              [disabled]="currentPage >= (meta.total_pages || 1)"
+              class="inline-flex h-7.5 w-7.5 items-center justify-center rounded border border-slate-200 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+              ›
+            </button>
+          </div>
+        </div>
+        }
+      </section>
+      }
+
+    </main>
+  </div>
+
+  <!-- LEAD DETAILS SLIDE-OVER DRAWER -->
+  @if (selectedLeadForDetail) {
+  <div class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" (click)="closeLeadDetail()"></div>
+
+    <div class="fixed inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
+      <div class="pointer-events-auto relative w-screen max-w-lg bg-white shadow-2xl flex flex-col">
+        <!-- Drawer Header -->
+        <div class="border-b border-slate-200 bg-slate-50/80 px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800" id="slide-over-title">Lead #{{ selectedLeadForDetail.id }}</h3>
+              <p class="text-xs text-slate-500 font-medium">{{ activeModuleLabel || selectedModuleKey }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            @if (isLoadingLeadDetail) {
+              <span class="text-xs text-indigo-600 font-medium animate-pulse">Syncing...</span>
+            }
+            <button type="button" (click)="closeLeadDetail()"
+              class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Drawer Content -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          <!-- Status & Meta Quick Banner -->
+          <div class="rounded-xl border border-slate-100 bg-slate-50/60 p-4 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">OTP Validation</span>
+              @if (selectedLeadForDetail.otp_validation === 'VALID' || selectedLeadForDetail.otp_validation === 'Valid' || selectedLeadForDetail.otp_validation === 'Verified' || selectedLeadForDetail.otp_validation === '1') {
+                <span class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Verified Lead
+                </span>
+              } @else {
+                <span class="mt-1 inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-700 border border-orange-200">
+                  <span class="h-2 w-2 rounded-full bg-orange-500"></span> {{ selectedLeadForDetail.otp_validation || 'Unverified / Invalid' }}
+                </span>
+              }
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Entry Date & Time</span>
+              <span class="text-xs font-semibold text-slate-700 mt-1 block">{{ selectedLeadForDetail.entrydate || '—' }}</span>
+            </div>
+          </div>
+
+          <!-- DUPLICATE BANNER (IF EXACT DUPLICATES PRESENT) -->
+          @if (selectedLeadForDetail.duplicate_count && selectedLeadForDetail.duplicate_count > 1) {
+          <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="h-8 w-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
+                {{ selectedLeadForDetail.duplicate_count }}x
+              </div>
+              <div>
+                <span class="text-xs font-bold text-amber-900 block">Exact Duplicate Records Found</span>
+                <span class="text-[11px] text-amber-700">This record represents {{ selectedLeadForDetail.duplicate_count }} duplicate submissions matching exact name/phone.</span>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- Personal & Contact Information -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Applicant & Contact Details</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Student / Applicant Name</span>
+                <span class="text-sm font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.name || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Phone Number</span>
+                <a [href]="selectedLeadForDetail.phone ? 'tel:' + selectedLeadForDetail.phone : null"
+                  class="text-sm font-bold text-indigo-600 hover:underline mt-0.5 block">{{ selectedLeadForDetail.phone || '—' }}</a>
+              </div>
+              <div class="col-span-2 rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Parent / Guardian Email</span>
+                <span class="text-sm font-semibold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.parent_email || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Academic & Campus Info -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Academic & Admission Choices</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Class / Grade</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.class || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Class Category</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.class_category || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Board</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.board || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Reservation Type</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.reservation_type || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Target City</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.city || '—' }}</span>
+              </div>
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Target Branch / Campus</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.branch || '—' }}</span>
+              </div>
+              @if (selectedLeadForDetail.stream) {
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Stream</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.stream }}</span>
+              </div>
+              }
+              @if (selectedLeadForDetail.course) {
+              <div class="rounded-lg border border-slate-200 p-3 bg-white">
+                <span class="text-[11px] text-slate-400 block font-medium">Course</span>
+                <span class="text-xs font-bold text-slate-800 mt-0.5 block">{{ selectedLeadForDetail.course }}</span>
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- Marketing & Campaign Attribution -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Marketing Attribution (UTM & Source)</h4>
+            <div class="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3.5 text-xs">
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">UTM Source</span>
+                <span class="font-bold text-slate-800">{{ selectedLeadForDetail.utm_source || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">UTM Medium</span>
+                <span class="font-bold text-slate-800">{{ selectedLeadForDetail.utm_medium || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">UTM Campaign</span>
+                <span class="font-bold text-slate-800">{{ selectedLeadForDetail.utm_campaign || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">UTM Term</span>
+                <span class="font-semibold text-slate-700">{{ selectedLeadForDetail.utm_term || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">UTM Content</span>
+                <span class="font-semibold text-slate-700">{{ selectedLeadForDetail.utm_content || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span class="text-slate-500 font-medium">Redirect From</span>
+                <span class="font-semibold text-slate-700">{{ selectedLeadForDetail.redirect_from || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Page Section</span>
+                <span class="font-semibold text-slate-700">{{ selectedLeadForDetail.page_section || '—' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="border-t border-slate-200 bg-white px-6 py-3 flex items-center justify-end">
+          <button type="button" (click)="closeLeadDetail()"
+            class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

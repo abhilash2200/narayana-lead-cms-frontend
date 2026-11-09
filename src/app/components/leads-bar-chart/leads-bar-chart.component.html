@@ -1,0 +1,193 @@
+<section class="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-2xs">
+
+  <!-- HEADER -->
+  <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3.5">
+    <div>
+      <div class="flex items-center gap-2">
+        <h3 class="text-sm font-bold text-slate-900">
+          Lead Inflow Analytics
+        </h3>
+        <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-100/60">
+          Monthly Flow
+        </span>
+      </div>
+      <p class="mt-0.5 text-[11px] text-slate-400">
+        Multi-channel student inquiry trajectory
+      </p>
+    </div>
+
+    <!-- CONTROLS & LEGEND -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <!-- VIEW TOGGLE (Line vs Bar) -->
+      <div class="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+        <button type="button" (click)="activeView = 'line'"
+          class="rounded-md px-2 py-1 text-[11px] font-semibold transition"
+          [class.bg-white]="activeView === 'line'"
+          [class.text-indigo-600]="activeView === 'line'"
+          [class.shadow-2xs]="activeView === 'line'"
+          [class.text-slate-500]="activeView !== 'line'">
+          Area
+        </button>
+        <button type="button" (click)="activeView = 'bar'"
+          class="rounded-md px-2 py-1 text-[11px] font-semibold transition"
+          [class.bg-white]="activeView === 'bar'"
+          [class.text-indigo-600]="activeView === 'bar'"
+          [class.shadow-2xs]="activeView === 'bar'"
+          [class.text-slate-500]="activeView !== 'bar'">
+          Bars
+        </button>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="flex items-center gap-3 text-[11px] font-medium text-slate-600 pl-1">
+        <button type="button" (click)="activeMetric = activeMetric === 'inbound' ? 'all' : 'inbound'"
+          class="flex items-center gap-1.5 transition hover:opacity-80"
+          [class.opacity-40]="activeMetric === 'outbound'">
+          <span class="h-2.5 w-2.5 rounded-full bg-[#8c7ae6] shadow-2xs"></span>
+          <span>Inbound</span>
+        </button>
+
+        <button type="button" (click)="activeMetric = activeMetric === 'outbound' ? 'all' : 'outbound'"
+          class="flex items-center gap-1.5 transition hover:opacity-80"
+          [class.opacity-40]="activeMetric === 'inbound'">
+          <span class="h-2.5 w-2.5 rounded-full bg-slate-400 shadow-2xs"></span>
+          <span>Outbound</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CHART CONTAINER -->
+  <div class="mt-4 flex">
+    <!-- Y AXIS -->
+    <div class="flex h-[190px] w-8 shrink-0 flex-col justify-between pb-6 pr-2 text-right">
+      <span class="text-[10px] font-semibold text-slate-400">80k</span>
+      <span class="text-[10px] font-semibold text-slate-400">60k</span>
+      <span class="text-[10px] font-semibold text-slate-400">40k</span>
+      <span class="text-[10px] font-semibold text-slate-400">20k</span>
+      <span class="text-[10px] font-semibold text-slate-400">0</span>
+    </div>
+
+    <!-- GRAPH CANVAS -->
+    <div class="relative min-w-0 flex-1 overflow-x-auto">
+      <!-- GRID -->
+      <div class="pointer-events-none absolute inset-x-0 top-0 h-[165px] flex flex-col justify-between">
+        <div class="border-t border-slate-100"></div>
+        <div class="border-t border-dashed border-slate-100"></div>
+        <div class="border-t border-dashed border-slate-100"></div>
+        <div class="border-t border-dashed border-slate-100"></div>
+        <div class="border-t border-slate-200"></div>
+      </div>
+
+      <!-- LINE / AREA VIEW -->
+      @if (activeView === 'line') {
+      <svg viewBox="0 0 1200 190" preserveAspectRatio="none"
+        class="relative z-10 h-[190px] w-full min-w-[540px] overflow-visible">
+        
+        <defs>
+          <linearGradient id="inboundGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#8c7ae6" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="#8c7ae6" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        <!-- INBOUND AREA FILL -->
+        @if (activeMetric !== 'outbound') {
+        <polygon [attr.points]="inboundAreaPoints" fill="url(#inboundGrad)" />
+        }
+
+        <!-- INBOUND LINE -->
+        @if (activeMetric !== 'outbound') {
+        <polyline [attr.points]="inboundPoints" fill="none" stroke="#8c7ae6" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" />
+        }
+
+        <!-- OUTBOUND LINE -->
+        @if (activeMetric !== 'inbound') {
+        <polyline [attr.points]="outboundPoints" fill="none" stroke="#94a3b8" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 2" />
+        }
+
+        <!-- INBOUND INTERACTIVE DOTS -->
+        @if (activeMetric !== 'outbound') {
+        @for (point of inboundChartPoints; track point.month) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" fill="white" stroke="#8c7ae6" stroke-width="2.5"
+          (mouseenter)="hoveredPoint = { month: point.month, inbound: point.value, outbound: point.outboundValue }"
+          (mouseleave)="hoveredPoint = null"
+          class="cursor-pointer transition-all duration-150 hover:r-6 hover:stroke-[3px]">
+          <title>{{ point.month }} Inbound: {{ point.value }}</title>
+        </circle>
+        }
+        }
+
+        <!-- OUTBOUND DOTS -->
+        @if (activeMetric !== 'inbound') {
+        @for (point of outboundChartPoints; track point.month) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3" fill="white" stroke="#94a3b8" stroke-width="2"
+          class="transition-all duration-150">
+          <title>{{ point.month }} Outbound: {{ point.value }}</title>
+        </circle>
+        }
+        }
+      </svg>
+      }
+
+      <!-- BAR VIEW -->
+      @if (activeView === 'bar') {
+      <div class="relative z-10 h-[190px] w-full min-w-[540px] flex items-end justify-between px-2 pb-6">
+        @for (item of chartData; track item.month) {
+        <div class="flex h-full flex-col justify-end items-center gap-1 flex-1 group cursor-pointer"
+          (mouseenter)="hoveredPoint = { month: item.month, inbound: item.inboundVal, outbound: item.outboundVal }"
+          (mouseleave)="hoveredPoint = null">
+          <div class="w-full max-w-[20px] flex items-end justify-center gap-1 h-[150px]">
+            @if (activeMetric !== 'outbound') {
+            <div class="w-2.5 rounded-t-sm bg-[#8c7ae6] transition-all duration-300 group-hover:brightness-110"
+              [style.height.%]="item.inboundHeight"></div>
+            }
+            @if (activeMetric !== 'inbound') {
+            <div class="w-2 rounded-t-sm bg-slate-300 transition-all duration-300 group-hover:bg-slate-400"
+              [style.height.%]="item.outboundHeight"></div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- MONTH LABELS -->
+      <div class="absolute bottom-0 left-0 right-0 flex min-w-[540px] justify-between px-2">
+        @for (item of chartData; track item.month) {
+        <span class="text-[10px] font-semibold text-slate-400">
+          {{ item.month }}
+        </span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER KPI HIGHLIGHTS -->
+  <div class="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-[11px]">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-slate-500">
+        <span class="font-medium text-slate-400">Peak Month:</span>
+        <span class="font-bold text-slate-800">May (75k)</span>
+      </div>
+      <span class="text-slate-200">•</span>
+      <div class="flex items-center gap-1.5 text-slate-500">
+        <span class="font-medium text-slate-400">Monthly Avg:</span>
+        <span class="font-bold text-slate-800">56.8k</span>
+      </div>
+    </div>
+
+    @if (hoveredPoint) {
+    <div class="rounded-lg bg-indigo-50/80 px-2.5 py-1 text-[11px] font-bold text-indigo-700 border border-indigo-100">
+      {{ hoveredPoint.month }}: Inbound {{ hoveredPoint.inbound }} • Outbound {{ hoveredPoint.outbound }}
+    </div>
+    } @else {
+    <span class="inline-flex items-center gap-1 font-bold text-emerald-600">
+      +14.2% Growth vs Last Period
+    </span>
+    }
+  </div>
+
+</section>

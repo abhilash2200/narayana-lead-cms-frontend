@@ -1,0 +1,147 @@
+<section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+  <!-- Section Header -->
+  <div class="flex flex-col gap-4 border-b border-slate-200 p-5
+           lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-slate-900">
+        Create Dynamic Page
+      </h2>
+
+      <p class="mt-1 text-sm text-slate-500">
+        Select location and class to create a dynamic landing page.
+      </p>
+    </div>
+  </div>
+
+  <!-- Selector Content -->
+  <div class="space-y-6 p-5">
+    <!-- City / Branch / Class -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <!-- City -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          City
+        </label>
+
+        <select [(ngModel)]="selectedCity" (ngModelChange)="onCityChange()" class="w-full rounded-lg border border-slate-200 bg-white px-4 py-3
+                 text-sm text-slate-800 outline-none transition
+                 focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+          <option value="">
+            Select City
+          </option>
+
+          @for (city of cities; track city.name) {
+          <option [value]="city.name">
+            {{ city.name }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <!-- Branch -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Branch
+        </label>
+
+        <select [(ngModel)]="selectedBranch" (ngModelChange)="onBranchChange()" [disabled]="!selectedCity" class="w-full rounded-lg border border-slate-200 bg-white px-4 py-3
+                 text-sm text-slate-800 outline-none transition
+                 disabled:cursor-not-allowed disabled:bg-slate-100
+                 focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+          <option value="">
+            Select Branch
+          </option>
+
+          @for (branch of availableBranches; track branch) {
+          <option [value]="branch">
+            {{ branch }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <!-- Class -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Class
+          <span class="font-normal text-slate-400">
+            (Optional)
+          </span>
+        </label>
+
+        <select [(ngModel)]="selectedClass" (ngModelChange)="onClassChange()" class="w-full rounded-lg border border-slate-200 bg-white px-4 py-3
+                 text-sm text-slate-800 outline-none transition
+                 focus:border-slate-400 focus:ring-2 focus:ring-slate-100">
+          <option value="">
+            All Classes
+          </option>
+
+          @for (classOption of classes; track classOption) {
+          <option [value]="classOption">
+            {{ classOption }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Generated URL -->
+    <div>
+      <label class="mb-2 block text-sm font-semibold text-slate-700">
+        Generated URL
+      </label>
+
+      <div class="flex flex-col gap-3 rounded-lg border border-slate-200
+               bg-slate-50 p-4 sm:flex-row sm:items-center">
+        <div class="min-w-0 flex-1 overflow-hidden rounded-lg border
+                 border-slate-200 bg-white px-4 py-3">
+          <p class="truncate text-sm font-medium text-slate-700">
+            {{ generatedUrl || 'Select city and branch to generate URL' }}
+          </p>
+        </div>
+
+        <button type="button" (click)="copyUrl()" [disabled]="!generatedUrl" class="rounded-lg border border-slate-200 bg-white px-4 py-3
+                 text-sm font-semibold text-slate-700 transition
+                 hover:bg-slate-100 disabled:cursor-not-allowed
+                 disabled:opacity-50">
+          {{ copied ? 'Copied' : 'Copy URL' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Dynamic Page -->
+    <div class="flex flex-col gap-4 rounded-lg border border-slate-200
+             bg-slate-50 p-4 sm:flex-row sm:items-center
+             sm:justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900">
+          Ready to create page?
+        </h3>
+
+        <p class="mt-1 text-xs text-slate-500">
+          Select a city and branch before creating the dynamic page.
+        </p>
+      </div>
+
+      <button type="button" (click)="addDynamicPage()" [disabled]="!canCreatePage" class="inline-flex items-center justify-center rounded-lg
+               bg-slate-900 px-5 py-3 text-sm font-semibold text-white
+               transition hover:bg-slate-800
+               disabled:cursor-not-allowed disabled:opacity-50">
+        + Add Dynamic Page
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    @if (pageCreated) {
+    <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+      <p class="text-sm font-semibold text-emerald-700">
+        Dynamic page created successfully.
+      </p>
+
+      <p class="mt-1 text-xs text-emerald-600">
+        {{ generatedUrl }}
+      </p>
+    </div>
+    }
+  </div>
+</section>

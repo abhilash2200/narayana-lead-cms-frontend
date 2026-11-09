@@ -1,0 +1,241 @@
+<div class="space-y-6">
+
+  <!-- Visibility Controls -->
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900">
+          Section Visibility
+        </h3>
+
+        <p class="mt-1 text-xs text-slate-500">
+          Choose where this section should be visible.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+
+        <!-- Desktop Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="faq.desktopActive" (click)="toggleDesktop()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Desktop
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="faq.desktopActive"
+            [class.bg-slate-300]="!faq.desktopActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="faq.desktopActive" [class.translate-x-0]="!faq.desktopActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ faq.desktopActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+        <!-- Mobile Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="faq.mobileActive" (click)="toggleMobile()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Mobile
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="faq.mobileActive"
+            [class.bg-slate-300]="!faq.mobileActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="faq.mobileActive" [class.translate-x-0]="!faq.mobileActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ faq.mobileActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+    <!-- Section Heading -->
+    <div class="grid gap-5 md:grid-cols-2">
+
+      <!-- Heading -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Heading
+        </label>
+
+        <input type="text" [(ngModel)]="faq.sectionHeading" (ngModelChange)="emitChange()"
+          placeholder="Frequently Asked Questions"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+      <!-- Sub Heading -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Sub Heading
+        </label>
+
+        <input type="text" [(ngModel)]="faq.sectionSubHeading" (ngModelChange)="emitChange()"
+          placeholder="Find answers to commonly asked questions"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+    </div>
+
+    <!-- FAQ Header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-base font-semibold text-slate-900">
+          FAQ Cards
+        </h3>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Add and manage frequently asked questions.
+        </p>
+      </div>
+
+      <button type="button" (click)="addFaq()"
+        class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+        + Add FAQ
+      </button>
+
+    </div>
+
+    <!-- FAQ Cards -->
+    <div class="space-y-3">
+
+      @for (
+      item of faq.faqs;
+      track item.id
+      ) {
+
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+
+        <!-- Card Header -->
+        <div (click)="toggleFaq(item.id)"
+          class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between cursor-pointer select-none hover:bg-slate-100/70 transition">
+
+          <div class="flex min-w-0 items-center gap-3">
+
+            <!-- Number -->
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-bold text-slate-600">
+              {{ $index + 1 }}
+            </div>
+
+            <!-- Question Preview -->
+            <div class="min-w-0">
+
+              <h4 class="truncate text-sm font-semibold text-slate-900">
+                {{
+                item.question ||
+                'Untitled FAQ'
+                }}
+              </h4>
+
+              <p class="mt-0.5 text-xs text-slate-500">
+                FAQ #{{ $index + 1 }}
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+
+            <!-- Remove -->
+            <button type="button" (click)="$event.stopPropagation(); removeFaq(item.id)"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+              Remove
+            </button>
+
+            <!-- Arrow Indicator -->
+            <div class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+              <svg class="h-4 w-4 transition-transform duration-200" [class.rotate-180]="isFaqOpen(item.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- FAQ Content -->
+        @if (isFaqOpen(item.id)) {
+
+        <div class="border-t border-slate-200 bg-white p-5 animate-fadeIn">
+
+          <div class="space-y-5">
+
+            <!-- Question -->
+            <div>
+
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                Question
+              </label>
+
+              <input type="text" [(ngModel)]="item.question" (ngModelChange)="emitChange()"
+                placeholder="What is the admission process?"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+            </div>
+
+            <!-- Answer -->
+            <div>
+
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                Answer
+              </label>
+
+              <textarea rows="5" [(ngModel)]="item.answer" (ngModelChange)="emitChange()"
+                placeholder="Write the answer to this frequently asked question."
+                class="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"></textarea>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        }
+
+      </div>
+
+      }
+
+      <!-- Empty State -->
+      @if (faq.faqs.length === 0) {
+
+      <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+
+        <h4 class="text-sm font-semibold text-slate-800">
+          No FAQs added
+        </h4>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Click "Add FAQ" to create your first FAQ.
+        </p>
+
+        <button type="button" (click)="addFaq()"
+          class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          + Add FAQ
+        </button>
+
+      </div>
+
+      }
+
+    </div>
+
+  </div>

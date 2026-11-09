@@ -1,0 +1,204 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+  <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 bg-slate-50/50">
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 font-bold">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">{{ isEditing ? 'Edit Outcome Rule #' + editingRuleId : 'Create Outcome Rule' }}</h2>
+          <p class="text-[11px] text-slate-500">Maps intent to exactly one PDF or allowlisted HTTPS URL</p>
+        </div>
+      </div>
+      <button type="button" (click)="closed.emit()" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
+      @if (formError) {
+      <div class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{{ formError }}</div>
+      }
+
+      <form (ngSubmit)="submit()" class="space-y-4">
+        <div>
+          <label class="mb-1 block text-xs font-bold text-slate-700">Intent <span class="text-rose-500">*</span></label>
+          <div class="flex flex-wrap items-center gap-1.5 mb-2">
+            @for (preset of commonIntents; track preset) {
+            <button type="button" (click)="formIntent = preset"
+              [class.bg-indigo-600]="formIntent === preset" [class.text-white]="formIntent === preset"
+              [class.bg-slate-100]="formIntent !== preset" [class.text-slate-600]="formIntent !== preset"
+              class="rounded-md px-2 py-0.5 text-[10px] font-semibold transition hover:bg-slate-200">
+              {{ preset }}
+            </button>
+            }
+          </div>
+          <input type="text" [(ngModel)]="formIntent" name="intent" required placeholder="e.g. ENQUIRY, BROCHURE, FEES, CALLBACK"
+            class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none uppercase font-semibold transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" />
+          @if (!isIntentSupported && formIntent.trim()) {
+          <p class="mt-1 text-[11px] font-medium text-amber-600 flex items-center gap-1">
+            <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Supported API intents: <strong>ENQUIRY</strong>, <strong>BROCHURE</strong>, <strong>FEES</strong>, <strong>CALLBACK</strong>. Other intents will be rejected by the backend.
+          </p>
+          } @else {
+          <p class="mt-0.5 text-[10px] text-slate-400">Canonical lead intents: ENQUIRY, BROCHURE, FEES, CALLBACK.</p>
+          }
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 space-y-3">
+          <label class="block text-xs font-bold text-slate-800">Outcome Destination <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-2 gap-2">
+            <label [class.border-indigo-500]="formOutcomeType === 'DOCUMENT'" [class.bg-white]="formOutcomeType === 'DOCUMENT'"
+              class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-2.5 transition">
+              <input type="radio" [(ngModel)]="formOutcomeType" name="outcomeType" value="DOCUMENT" class="text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <p class="text-xs font-bold text-slate-800">Managed PDF Document</p>
+                <p class="text-[10px] text-slate-500">Download brochure or fee PDF</p>
+              </div>
+            </label>
+            <label [class.border-indigo-500]="formOutcomeType === 'URL'" [class.bg-white]="formOutcomeType === 'URL'"
+              class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-2.5 transition">
+              <input type="radio" [(ngModel)]="formOutcomeType" name="outcomeType" value="URL" class="text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <p class="text-xs font-bold text-slate-800">HTTPS Redirect URL</p>
+                <p class="text-[10px] text-slate-500">Allowlisted external page</p>
+              </div>
+            </label>
+          </div>
+
+          @if (formOutcomeType === 'DOCUMENT') {
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-slate-700">Select Managed Document</label>
+            @if (documents.length === 0) {
+            <div class="rounded-lg border border-slate-200 bg-white p-3 text-center text-xs text-slate-500">
+              No managed documents uploaded yet. You can enter a Document ID manually below, or upload one in the Documents menu.
+            </div>
+            } @else {
+            <select [(ngModel)]="formDocumentId" name="docSelect"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10">
+              <option [ngValue]="0">— Select a Managed Document —</option>
+              @for (doc of documents; track doc.id) {
+              <option [ngValue]="Number(doc.id)">#{{ doc.id }} - {{ doc.name }} ({{ doc.download_filename || 'PDF' }})</option>
+              }
+            </select>
+            }
+            <div class="mt-2 flex items-center gap-2">
+              <span class="text-[11px] text-slate-500">Or Document ID:</span>
+              <input type="number" [(ngModel)]="formDocumentId" name="docIdInput" min="0"
+                class="h-7 w-24 rounded border border-slate-200 bg-white px-2 font-mono text-xs text-slate-800" />
+            </div>
+          </div>
+          }
+          @if (formOutcomeType === 'URL') {
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-slate-700">Allowlisted HTTPS URL</label>
+            <input type="url" [(ngModel)]="formRedirectUrl" name="redirectUrl" placeholder="https://wbnarayanaschools.in/admissions"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" />
+            <p class="mt-0.5 text-[10px] text-slate-400">Must be an allowlisted HTTPS URL (e.g. https://wbnarayanaschools.in/...)</p>
+          </div>
+          }
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-800">Optional Scope (Location &amp; Academic)</label>
+            <span class="text-[10px] text-slate-400 font-medium">Leave at 0 for Global (All)</span>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-[11px] font-semibold text-slate-600">City</label>
+              <select [(ngModel)]="formCityId" (ngModelChange)="onCityChange()" name="cityId"
+                class="h-8.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500">
+                <option [ngValue]="0">All Cities (0)</option>
+                @for (city of cities; track city.id) {
+                <option [ngValue]="Number(city.id)">{{ city.name }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-[11px] font-semibold text-slate-600">Branch</label>
+              <select [(ngModel)]="formBranchId" name="branchId"
+                class="h-8.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500">
+                <option [ngValue]="0">All Branches (0)</option>
+                @for (branch of filteredBranchesForForm; track branch.id) {
+                <option [ngValue]="Number(branch.id)">{{ branch.name }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-[11px] font-semibold text-slate-600">Class</label>
+              <select [(ngModel)]="formClassId" name="classId"
+                class="h-8.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500">
+                <option [ngValue]="0">All Classes (0)</option>
+                @for (cls of classes; track cls.id) {
+                <option [ngValue]="Number(cls.id)">{{ cls.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-xs font-bold text-slate-700">Priority</label>
+            <input type="number" [(ngModel)]="formPriority" name="priority" min="0" placeholder="0"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 font-mono text-xs text-slate-800 outline-none focus:border-indigo-500" />
+            <p class="mt-0.5 text-[10px] text-slate-400">Higher numbers override lower priority.</p>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-bold text-slate-700">Starts At (Optional)</label>
+            <input type="datetime-local" [(ngModel)]="formStartsAt" name="startsAt"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-bold text-slate-700">Ends At (Optional)</label>
+            <input type="datetime-local" [(ngModel)]="formEndsAt" name="endsAt"
+              class="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-bold text-slate-700">Status</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label [class.border-emerald-500]="formStatus === 'ACTIVE'" [class.bg-emerald-50/40]="formStatus === 'ACTIVE'"
+              class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-2 transition">
+              <input type="radio" [(ngModel)]="formStatus" name="status" value="ACTIVE" class="text-emerald-600 focus:ring-emerald-500" />
+              <span class="text-xs font-bold text-slate-800">ACTIVE</span>
+            </label>
+            <label [class.border-amber-500]="formStatus === 'INACTIVE'" [class.bg-amber-50/40]="formStatus === 'INACTIVE'"
+              class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 p-2 transition">
+              <input type="radio" [(ngModel)]="formStatus" name="status" value="INACTIVE" class="text-amber-600 focus:ring-amber-500" />
+              <span class="text-xs font-bold text-slate-800">INACTIVE</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+          <button type="button" (click)="closed.emit()"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="isSubmitting || !isFormValid"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-indigo-700 disabled:opacity-50">
+            @if (isSubmitting) {
+            <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            Saving...
+            } @else {
+            {{ isEditing ? 'Save Changes' : 'Create Outcome Rule' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

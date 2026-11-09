@@ -1,0 +1,260 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <app-sidebar></app-sidebar>
+
+  <div class="lg:ml-[230px]">
+    <app-topbar title="Classes" subtitle="Class Master"></app-topbar>
+
+    <main class="p-3.5 md:p-5">
+      <div class="w-full">
+
+        <!-- COMPACT HEADER & TOOLBAR -->
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-lg font-bold text-slate-800">Classes</h1>
+            <span class="rounded-full bg-slate-200/80 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+              {{ totalItems }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- QUICK SEARCH -->
+            <div class="relative">
+              <input type="text" [(ngModel)]="searchTerm" placeholder="Filter classes..."
+                class="h-8.5 w-48 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-xs font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 sm:w-64" />
+              <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            <!-- ADD BUTTON -->
+            <button type="button" (click)="goToAddClass()"
+              class="inline-flex h-8.5 items-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+              <span class="text-sm font-bold leading-none">+</span>
+              Add Class
+            </button>
+          </div>
+        </div>
+
+        <!-- ERROR MESSAGE -->
+        @if (errorMessage) {
+        <div class="mb-3 rounded-lg border border-red-100 bg-red-50 px-3.5 py-2 text-xs font-medium text-red-600">
+          {{ errorMessage }}
+        </div>
+        }
+
+        <!-- COMPACT TABLE CARD -->
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs">
+
+          <!-- LOADING -->
+          @if (isLoading) {
+          <div class="flex items-center justify-center py-12">
+            <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <svg class="h-4 w-4 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              Loading classes...
+            </div>
+          </div>
+          } @else if (filteredClasses.length === 0) {
+          <!-- EMPTY -->
+          <div class="py-12 text-center">
+            <p class="text-xs font-semibold text-slate-600">
+              {{ searchTerm ? 'No matching classes found' : 'No classes found' }}
+            </p>
+            <p class="mt-1 text-[11px] text-slate-400">
+              {{ searchTerm ? 'Try adjusting your search filter.' : 'Add your first class to get started.' }}
+            </p>
+          </div>
+          } @else {
+          <!-- TABLE -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="border-b border-slate-200 bg-slate-50/75">
+                <tr>
+                  <th class="w-16 px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+                    ID
+                  </th>
+                  <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Class Name
+                  </th>
+                  <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Slug
+                  </th>
+                  <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Status
+                  </th>
+                  <th class="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Sort Order
+                  </th>
+                  <th class="px-3.5 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-600">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody class="divide-y divide-slate-100">
+                @for (item of filteredClasses; track item.id) {
+                <tr class="transition hover:bg-slate-50/80">
+                  <!-- ID -->
+                  <td class="px-3.5 py-2.5 font-mono text-xs font-semibold text-slate-500">
+                    #{{ item.id }}
+                  </td>
+
+                  <!-- CLASS -->
+                  <td class="px-3.5 py-2.5">
+                    <span class="text-sm font-semibold text-slate-900">
+                      {{ item.name }}
+                    </span>
+                  </td>
+
+                  <!-- SLUG -->
+                  <td class="px-3.5 py-2.5">
+                    <span class="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-medium text-slate-600">
+                      {{ item.slug }}
+                    </span>
+                  </td>
+
+                  <!-- STATUS -->
+                  <td class="px-3.5 py-2.5">
+                    @if (item.status === 'ACTIVE') {
+                    <span
+                      class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                      <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                      Active
+                    </span>
+                    } @else {
+                    <span
+                      class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 ring-1 ring-inset ring-slate-400/20">
+                      <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                      Inactive
+                    </span>
+                    }
+                  </td>
+
+                  <!-- SORT ORDER -->
+                  <td class="px-3.5 py-2.5 text-xs font-medium text-slate-700">
+                    {{ item.sort_order }}
+                  </td>
+
+                  <!-- ACTIONS -->
+                  <td class="px-3.5 py-2.5 text-right">
+                    <div class="inline-flex items-center gap-1.5">
+                      <!-- EDIT -->
+                      <button type="button" (click)="editClass(item)"
+                        class="rounded-md border border-indigo-200/60 bg-indigo-50/70 px-2.5 py-1 text-xs font-bold text-indigo-600 transition hover:bg-indigo-100">
+                        Edit
+                      </button>
+
+                      <!-- DELETE -->
+                      <button type="button" (click)="confirmDelete(item)"
+                        class="rounded-md border border-red-200/60 bg-red-50/70 px-2.5 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-100">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PAGINATION -->
+          <div
+            class="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-3.5 py-2.5 sm:flex-row">
+            <span class="text-xs text-slate-600">
+              Showing <span class="font-semibold text-slate-800">{{ startIndex }}</span> to
+              <span class="font-semibold text-slate-800">{{ endIndex }}</span> of
+              <span class="font-semibold text-slate-800">{{ totalItems }}</span> classes
+            </span>
+
+            <div class="flex items-center gap-1">
+              <!-- PREV -->
+              <button type="button" (click)="prevPage()" [disabled]="currentPage === 1"
+                class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                Previous
+              </button>
+
+              <!-- PAGES -->
+              @for (p of pages; track p) {
+              <button type="button" (click)="goToPage(p)" [class.bg-indigo-600]="p === currentPage"
+                [class.text-white]="p === currentPage" [class.border-indigo-600]="p === currentPage"
+                [class.bg-white]="p !== currentPage" [class.text-slate-600]="p !== currentPage"
+                [class.border-slate-200]="p !== currentPage"
+                class="h-7 w-7 rounded-md border text-xs font-semibold shadow-2xs transition hover:bg-slate-100">
+                {{ p }}
+              </button>
+              }
+
+              <!-- NEXT -->
+              <button type="button" (click)="nextPage()" [disabled]="currentPage === totalPages"
+                class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                Next
+              </button>
+            </div>
+          </div>
+          }
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+@if (classToDelete) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+  <div class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-xl transition-all">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-slate-800">Delete Class</h3>
+        <p class="mt-1 text-xs text-slate-500">
+          Are you sure you want to delete <span class="font-semibold text-slate-700">"{{ classToDelete.name }}"</span>?
+          This action cannot be undone.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-5 flex items-center justify-end gap-2">
+      <button type="button" (click)="cancelDelete()" [disabled]="deletingClassId !== null"
+        class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+        Cancel
+      </button>
+      <button type="button" (click)="deleteClass()" [disabled]="deletingClassId !== null"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50">
+        @if (deletingClassId !== null) {
+        <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        Deleting...
+        } @else {
+        Delete
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- TOAST NOTIFICATION -->
+@if (toastMessage) {
+<div
+  class="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-2.5 shadow-lg transition-all"
+  [class.bg-emerald-900]="toastType === 'success'" [class.text-white]="toastType === 'success'"
+  [class.border-emerald-700]="toastType === 'success'" [class.bg-amber-900]="toastType === 'warning'"
+  [class.text-amber-100]="toastType === 'warning'" [class.border-amber-700]="toastType === 'warning'"
+  [class.bg-red-900]="toastType === 'error'" [class.text-white]="toastType === 'error'"
+  [class.border-red-700]="toastType === 'error'">
+  <span class="text-xs font-semibold">{{ toastMessage }}</span>
+</div>
+}

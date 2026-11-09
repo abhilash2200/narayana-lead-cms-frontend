@@ -1,0 +1,189 @@
+<!-- BACKDROP OVERLAY FOR MOBILE -->
+@if (isMobileOpen()) {
+  <div
+    (click)="closeMobileSidebar()"
+    class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-xs transition-opacity lg:hidden"
+    aria-hidden="true">
+  </div>
+}
+
+<aside
+  class="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-slate-100 bg-white transition-transform duration-300 ease-in-out lg:z-40 lg:w-[230px] lg:translate-x-0"
+  [class.-translate-x-full]="!isMobileOpen()"
+  [class.translate-x-0]="isMobileOpen()"
+  [class.shadow-2xl]="isMobileOpen()">
+  <div class="flex h-14 items-center justify-between border-b border-slate-100 px-4">
+    <div class="flex items-center">
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0f172a] text-xs font-black text-white shadow-xs">
+        <span class="text-[#8c7ae6]">L</span>
+      </div>
+
+      <div class="ml-2.5 min-w-0">
+        <h1 class="truncate text-sm font-bold tracking-tight text-slate-900">
+          Leads CMS
+        </h1>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          Admin Console
+        </p>
+      </div>
+    </div>
+
+    <!-- MOBILE CLOSE BUTTON -->
+    <button
+      type="button"
+      (click)="closeMobileSidebar()"
+      aria-label="Close navigation"
+      class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition lg:hidden">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  <nav class="flex-1 overflow-y-auto px-2.5 py-4">
+    <p class="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+      Main Menu
+    </p>
+    <a routerLink="/dashboard" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Dashboard</span>
+    </a>
+    <a routerLink="/dynamic-pages" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          <path d="M17.5 14v7M14 17.5h7" stroke-linecap="round"></path>
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Dynamic Pages</span>
+    </a>
+    <a routerLink="/leads" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" stroke-linecap="round"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round"></path>
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Lead List</span>
+    </a>
+    <a routerLink="/documents" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 11v6m-3-3h6" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Documents</span>
+    </a>
+    <a routerLink="/download-rules" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Download Rules</span>
+    </a>
+    <div class="my-3 border-t border-slate-100"></div>
+    <p class="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+      Management
+    </p>
+    <a routerLink="/cities" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Cities</span>
+    </a>
+    <a routerLink="/branches" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Branches</span>
+    </a>
+    <a routerLink="/classes" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Classes</span>
+    </a>
+    <a routerLink="/admission-configuration" routerLinkActive="bg-[#f5f3ff] text-[#8c7ae6] font-bold shadow-2xs"
+      class="group mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 hover:text-slate-900">
+      <span
+        class="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100/70 text-slate-500 transition group-[.bg-\[\#f5f3ff\]]:bg-[#8c7ae6] group-[.bg-\[\#f5f3ff\]]:text-white">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      </span>
+      <span class="flex-1 truncate">Admission Options</span>
+    </a>
+  </nav>
+  <div class="border-t border-slate-100 p-2.5">
+    <div class="flex items-center gap-2.5 rounded-xl bg-slate-50 p-2">
+      <div
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#8c7ae6] to-[#7158e2] text-xs font-bold text-white shadow-2xs">
+        {{ userInitial }}
+      </div>
+      <div class="relative flex-1">
+        <button type="button" (click)="toggleMenu()"
+          class="flex w-full items-center justify-between rounded-md text-left text-xs text-slate-600 transition hover:text-slate-900"
+          title="Account menu">
+          <span class="truncate font-semibold">{{ userName }}</span>
+          <span class="text-sm leading-none text-slate-400">⋮</span>
+        </button>
+
+        @if (isMenuOpen) {
+        <div
+          class="absolute bottom-full right-0 mb-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-lg z-50">
+          <button type="button" (click)="logout()" [disabled]="isLoggingOut"
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+            </svg>
+            {{ isLoggingOut ? 'Signing out...' : 'Sign out' }}
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</aside>

@@ -1,0 +1,772 @@
+<div class="space-y-6">
+
+  <!-- Visibility Controls -->
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900">
+          Section Visibility
+        </h3>
+        <p class="mt-1 text-xs text-slate-500">
+          Choose where this section should be visible.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+
+        <!-- Desktop Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="course.desktopActive" (click)="toggleDesktop()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+          <span class="text-xs font-semibold text-slate-600">
+            Desktop
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="course.desktopActive" [class.bg-slate-300]="!course.desktopActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="course.desktopActive" [class.translate-x-0]="!course.desktopActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ course.desktopActive ? 'Show' : 'Hide' }}
+          </span>
+        </button>
+
+        <!-- Mobile Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="course.mobileActive" (click)="toggleMobile()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+          <span class="text-xs font-semibold text-slate-600">
+            Mobile
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="course.mobileActive" [class.bg-slate-300]="!course.mobileActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="course.mobileActive" [class.translate-x-0]="!course.mobileActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ course.mobileActive ? 'Show' : 'Hide' }}
+          </span>
+        </button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Heading -->
+    <div class="grid gap-5 md:grid-cols-2">
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Heading
+        </label>
+
+        <input type="text" [(ngModel)]="course.sectionHeading" (ngModelChange)="emitChange()" placeholder="Courses"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Sub Heading
+        </label>
+
+        <input type="text" [(ngModel)]="course.sectionSubHeading" (ngModelChange)="emitChange()"
+          placeholder="Explore our courses"
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+    </div>
+
+    <!-- Course Header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h3 class="text-base font-semibold text-slate-900">
+          Course Cards
+        </h3>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Add and manage individual courses.
+        </p>
+      </div>
+
+      <button type="button" (click)="addCourse()"
+        class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+        + Add Course
+      </button>
+    </div>
+
+    <!-- Course Cards -->
+    <div class="space-y-3">
+
+      @for (
+      courseItem of course.courses;
+      track courseItem.id
+      ) {
+
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+
+        <!-- Card Header -->
+        <div (click)="toggleCourse(courseItem.id)"
+          class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between cursor-pointer select-none hover:bg-slate-100/70 transition">
+
+          <div class="flex min-w-0 items-center gap-3">
+
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-bold text-slate-600">
+              {{ $index + 1 }}
+            </div>
+
+            <div class="min-w-0">
+              <h4 class="truncate text-sm font-semibold text-slate-900">
+                {{
+                courseItem.heading ||
+                'Untitled Course'
+                }}
+              </h4>
+
+              <p class="mt-0.5 text-xs text-slate-500">
+                Course #{{ $index + 1 }}
+              </p>
+            </div>
+
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+
+            <button type="button" (click)="$event.stopPropagation(); removeCourse(courseItem.id)"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+              Remove
+            </button>
+
+            <div class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+              <svg class="h-4 w-4 transition-transform duration-200" [class.rotate-180]="isCourseOpen(courseItem.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Card Content -->
+        @if (isCourseOpen(courseItem.id)) {
+
+        <div class="border-t border-slate-200 bg-white p-5 animate-fadeIn">
+
+          <div class="space-y-5">
+
+            <!-- Images -->
+            <div class="grid gap-5 md:grid-cols-3">
+
+              <!-- Image 1 (Desktop Primary) -->
+              <div>
+                <app-image-upload label="Course Image 1 (Desktop)" description="Primary desktop image (e.g. 560x560)"
+                  [imagePreview]="courseItem.image1"
+                  [mediaId]="courseItem.mediaId1 || courseItem.mediaId"
+                  (imageChange)="onCourseImageChange(courseItem.id, 1, $event)"
+                  (mediaIdChange)="onCourseMediaId1Change(courseItem.id, $event)" />
+              </div>
+
+              <!-- Image 2 (Desktop Secondary) -->
+              <div>
+                <app-image-upload label="Course Image 2 (Desktop)" description="Secondary desktop image (e.g. 560x560)"
+                  [imagePreview]="courseItem.image2"
+                  [mediaId]="courseItem.mediaId2"
+                  (imageChange)="onCourseImageChange(courseItem.id, 2, $event)"
+                  (mediaIdChange)="onCourseMediaId2Change(courseItem.id, $event)" />
+              </div>
+
+              <!-- Image 3 (Mobile Card Image) -->
+              <div>
+                <app-image-upload label="Course Mobile Image" description="Banner image for mobile card (e.g. 400x280)"
+                  [imagePreview]="courseItem.mobileImage || ''"
+                  [mediaId]="courseItem.mobileMediaId"
+                  (imageChange)="onCourseMobileImageChange(courseItem.id, $event)"
+                  (mediaIdChange)="onCourseMobileMediaIdChange(courseItem.id, $event)" />
+              </div>
+
+            </div>
+
+            <!-- Course Heading -->
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                Course Heading
+              </label>
+
+              <input type="text" [(ngModel)]="courseItem.heading" (ngModelChange)="emitChange()"
+                placeholder="Enter course heading"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+            </div>
+
+            <!-- Course Heading Badge Icon / Image -->
+            <div>
+              <app-image-upload label="Course Heading Badge Icon / Image"
+                description="Upload circular badge icon for course heading (e.g. 64x64 or 80x80 SVG or PNG)"
+                [imagePreview]="courseItem.badgeIconImage || ''"
+                [mediaId]="courseItem.badgeIconMediaId"
+                (imageChange)="onCourseBadgeIconChange(courseItem.id, $event)"
+                (mediaIdChange)="onCourseBadgeIconMediaIdChange(courseItem.id, $event)" />
+            </div>
+
+            <!-- Sub Heading 1 -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 class="text-sm font-semibold text-slate-900">
+                    Sub Heading 1
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Add heading, icon and list points.
+                  </p>
+                </div>
+
+                <button type="button" (click)="
+                              addListItem(
+                                courseItem.id,
+                                1
+                              )
+                            "
+                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
+                  + Add Point
+                </button>
+              </div>
+
+              <div class="mt-4">
+
+                <div class="grid gap-3 sm:grid-cols-4">
+                  <div class="sm:col-span-3">
+                    <input type="text" [(ngModel)]="courseItem.subHeading1" (ngModelChange)="emitChange()"
+                      placeholder="Enter sub heading 1 (e.g. Holistic Development:)"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                  </div>
+                  <div>
+                    <select [(ngModel)]="courseItem.icon1" (ngModelChange)="emitChange()"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
+                      <option value="TRENDING_UP">📈 Trending Chart</option>
+                      <option value="PUZZLE">🧩 Puzzle</option>
+                      <option value="FLASK">🧪 Science Flask</option>
+                      <option value="ID_BADGE">🪪 ID / Teacher</option>
+                      <option value="STAR">⭐ Star</option>
+                      <option value="BOOK">📖 Book</option>
+                      <option value="BRAIN">🧠 Brain / Concept</option>
+                      <option value="SHIELD">🛡️ Shield</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mt-3 space-y-2">
+
+                  @for (
+                  point of courseItem.listItems1;
+                  track point.id
+                  ) {
+
+                  <div class="flex items-center gap-2">
+
+                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
+                      placeholder="Enter list point"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+                    <button type="button" (click)="
+                                    removeListItem(
+                                      courseItem.id,
+                                      1,
+                                      point.id
+                                    )
+                                  "
+                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+                      Remove
+                    </button>
+
+                  </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Sub Heading 2 -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 class="text-sm font-semibold text-slate-900">
+                    Sub Heading 2
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Add heading and list points.
+                  </p>
+                </div>
+
+                <button type="button" (click)="
+                              addListItem(
+                                courseItem.id,
+                                2
+                              )
+                            "
+                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
+                  + Add Point
+                </button>
+              </div>
+
+              <div class="mt-4">
+
+                <div class="grid gap-3 sm:grid-cols-4">
+                  <div class="sm:col-span-3">
+                    <input type="text" [(ngModel)]="courseItem.subHeading2" (ngModelChange)="emitChange()"
+                      placeholder="Enter sub heading 2 (e.g. Concept-Based Learning:)"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                  </div>
+                  <div>
+                    <select [(ngModel)]="courseItem.icon2" (ngModelChange)="emitChange()"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
+                      <option value="PUZZLE">🧩 Puzzle</option>
+                      <option value="TRENDING_UP">📈 Trending Chart</option>
+                      <option value="FLASK">🧪 Science Flask</option>
+                      <option value="ID_BADGE">🪪 ID / Teacher</option>
+                      <option value="STAR">⭐ Star</option>
+                      <option value="BOOK">📖 Book</option>
+                      <option value="BRAIN">🧠 Brain / Concept</option>
+                      <option value="SHIELD">🛡️ Shield</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mt-3 space-y-2">
+
+                  @for (
+                  point of courseItem.listItems2;
+                  track point.id
+                  ) {
+
+                  <div class="flex items-center gap-2">
+
+                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
+                      placeholder="Enter list point"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+                    <button type="button" (click)="
+                                    removeListItem(
+                                      courseItem.id,
+                                      2,
+                                      point.id
+                                    )
+                                  "
+                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+                      Remove
+                    </button>
+
+                  </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Sub Heading 3 -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 class="text-sm font-semibold text-slate-900">
+                    Sub Heading 3
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Add heading and list points.
+                  </p>
+                </div>
+
+                <button type="button" (click)="
+                              addListItem(
+                                courseItem.id,
+                                3
+                              )
+                            "
+                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
+                  + Add Point
+                </button>
+              </div>
+
+              <div class="mt-4">
+
+                <div class="grid gap-3 sm:grid-cols-4">
+                  <div class="sm:col-span-3">
+                    <input type="text" [(ngModel)]="courseItem.subHeading3" (ngModelChange)="emitChange()"
+                      placeholder="Enter sub heading 3 (e.g. Logical & Scientific Thinking:)"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                  </div>
+                  <div>
+                    <select [(ngModel)]="courseItem.icon3" (ngModelChange)="emitChange()"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
+                      <option value="FLASK">🧪 Science Flask</option>
+                      <option value="TRENDING_UP">📈 Trending Chart</option>
+                      <option value="PUZZLE">🧩 Puzzle</option>
+                      <option value="ID_BADGE">🪪 ID / Teacher</option>
+                      <option value="STAR">⭐ Star</option>
+                      <option value="BOOK">📖 Book</option>
+                      <option value="BRAIN">🧠 Brain / Concept</option>
+                      <option value="SHIELD">🛡️ Shield</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mt-3 space-y-2">
+
+                  @for (
+                  point of courseItem.listItems3;
+                  track point.id
+                  ) {
+
+                  <div class="flex items-center gap-2">
+
+                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
+                      placeholder="Enter list point"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+                    <button type="button" (click)="
+                                    removeListItem(
+                                      courseItem.id,
+                                      3,
+                                      point.id
+                                    )
+                                  "
+                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+                      Remove
+                    </button>
+
+                  </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Sub Heading 4 -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 class="text-sm font-semibold text-slate-900">
+                    Sub Heading 4
+                  </h4>
+
+                  <p class="mt-1 text-xs text-slate-500">
+                    Add heading and list points.
+                  </p>
+                </div>
+
+                <button type="button" (click)="
+                              addListItem(
+                                courseItem.id,
+                                4
+                              )
+                            "
+                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
+                  + Add Point
+                </button>
+              </div>
+
+              <div class="mt-4">
+
+                <div class="grid gap-3 sm:grid-cols-4">
+                  <div class="sm:col-span-3">
+                    <input type="text" [(ngModel)]="courseItem.subHeading4" (ngModelChange)="emitChange()"
+                      placeholder="Enter sub heading 4 (e.g. Structured & Supportive Learning:)"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                  </div>
+                  <div>
+                    <select [(ngModel)]="courseItem.icon4" (ngModelChange)="emitChange()"
+                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
+                      <option value="ID_BADGE">🪪 ID / Teacher</option>
+                      <option value="TRENDING_UP">📈 Trending Chart</option>
+                      <option value="PUZZLE">🧩 Puzzle</option>
+                      <option value="FLASK">🧪 Science Flask</option>
+                      <option value="STAR">⭐ Star</option>
+                      <option value="BOOK">📖 Book</option>
+                      <option value="BRAIN">🧠 Brain / Concept</option>
+                      <option value="SHIELD">🛡️ Shield</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mt-3 space-y-2">
+
+                  @for (
+                  point of courseItem.listItems4;
+                  track point.id
+                  ) {
+
+                  <div class="flex items-center gap-2">
+
+                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
+                      placeholder="Enter list point"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+                    <button type="button" (click)="
+                                    removeListItem(
+                                      courseItem.id,
+                                      4,
+                                      point.id
+                                    )
+                                  "
+                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+                      Remove
+                    </button>
+
+                  </div>
+
+                  }
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- Mobile Version Configuration -->
+            <div class="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50 p-5 space-y-5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-blue-200/80 pb-4">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#034DA2] text-white shadow-md">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-base font-bold text-slate-900">
+                      Mobile Version Configuration
+                    </h4>
+                    <p class="text-xs text-slate-500">
+                      Configure bullet points displayed specifically on mobile cards.
+                    </p>
+                  </div>
+                </div>
+
+                <button type="button" (click)="addMobileHighlight(courseItem.id)"
+                  class="inline-flex items-center gap-1.5 rounded-xl bg-[#034DA2] px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-800 transition">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  + Add Mobile Point
+                </button>
+              </div>
+
+              <!-- Mobile Highlights Points List -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Mobile Highlights / Points
+                  </label>
+                  <span class="text-xs font-medium text-slate-500">
+                    {{ (courseItem.mobileHighlights || []).length }} custom points
+                  </span>
+                </div>
+
+                <p class="text-xs text-slate-500">
+                  These points appear inside the dark-blue card on phones. If left empty, highlights will be automatically generated from the sub-headings.
+                </p>
+
+                <div class="space-y-2.5">
+                  @for (mPoint of courseItem.mobileHighlights; track mPoint.id; let pIdx = $index) {
+                    <div class="flex items-center gap-2">
+                      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-xs font-bold text-blue-900">
+                        {{ pIdx + 1 }}
+                      </span>
+                      <input type="text" [(ngModel)]="mPoint.text" (ngModelChange)="emitChange()"
+                        placeholder="e.g. Focus on overall development of the child"
+                        class="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                      <button type="button" (click)="removeMobileHighlight(courseItem.id, mPoint.id)"
+                        class="rounded-lg p-2 text-red-500 hover:bg-red-50 transition" title="Remove point">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  }
+
+                  @if (!courseItem.mobileHighlights || courseItem.mobileHighlights.length === 0) {
+                    <div class="rounded-xl border border-dashed border-blue-200 bg-white/70 p-5 text-center">
+                      <svg class="mx-auto h-8 w-8 text-blue-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p class="text-xs font-medium text-slate-600">
+                        No specific mobile points added yet.
+                      </p>
+                      <p class="text-[11px] text-slate-400 mt-0.5">
+                        The mobile card will automatically display points from your desktop sub-headings.
+                      </p>
+                      <button type="button" (click)="addMobileHighlight(courseItem.id)"
+                        class="mt-3 inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 transition">
+                        + Add Specific Mobile Point
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Course Buttons -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <div class="mb-4">
+                <h4 class="text-sm font-semibold text-slate-900">
+                  Course Buttons
+                </h4>
+
+                <p class="mt-1 text-xs text-slate-500">
+                  Configure three independent buttons.
+                </p>
+              </div>
+
+              <div class="space-y-4">
+
+                <!-- Button 1 -->
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
+                    Button 1
+                  </h5>
+
+                  <div class="grid gap-5 md:grid-cols-2">
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button Text
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonText1" (ngModelChange)="emitChange()"
+                        placeholder="Apply Now"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button URL
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonUrl1" (ngModelChange)="emitChange()"
+                        placeholder="https://example.com/apply"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <!-- Button 2 -->
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
+                    Button 2
+                  </h5>
+
+                  <div class="grid gap-5 md:grid-cols-2">
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button Text
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonText2" (ngModelChange)="emitChange()"
+                        placeholder="View Details"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button URL
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonUrl2" (ngModelChange)="emitChange()"
+                        placeholder="https://example.com/details"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <!-- Button 3 -->
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
+                    Button 3
+                  </h5>
+
+                  <div class="grid gap-5 md:grid-cols-2">
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button Text
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonText3" (ngModelChange)="emitChange()"
+                        placeholder="Download Brochure"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                    <div>
+                      <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        Button URL
+                      </label>
+
+                      <input type="text" [(ngModel)]="courseItem.buttonUrl3" (ngModelChange)="emitChange()"
+                        placeholder="https://example.com/brochure"
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        }
+
+      </div>
+
+      }
+
+      <!-- Empty State -->
+      @if (course.courses.length === 0) {
+
+      <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+        <h4 class="text-sm font-semibold text-slate-800">
+          No courses added
+        </h4>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Click "Add Course" to create your first course.
+        </p>
+
+        <button type="button" (click)="addCourse()"
+          class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          + Add Course
+        </button>
+      </div>
+
+      }
+
+    </div>
+
+  </div>

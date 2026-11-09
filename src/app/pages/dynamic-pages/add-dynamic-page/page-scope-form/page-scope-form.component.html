@@ -1,0 +1,248 @@
+<section class="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
+
+  <!-- Header -->
+  <div class="relative flex items-center justify-between border-b border-slate-100 px-4 py-3 sm:px-5">
+    <div class="flex items-center gap-2.5">
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f5f3ff] text-sm font-bold text-[#8c7ae6]">
+        +
+      </div>
+      <div>
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-800">
+          Page Details & Scope
+        </h2>
+        <p class="text-xs font-medium text-slate-500">
+          Configure location, SEO and URL
+        </p>
+      </div>
+    </div>
+
+    <!-- Page Details Action Buttons -->
+    @if (pageCreated && selectedRevisionId !== null) {
+    <div class="flex items-center gap-2">
+      <button type="button" (click)="saveMetadata.emit()" [disabled]="isSavingMetadata"
+        class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#8c7ae6] px-3.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#7158e2] disabled:cursor-not-allowed disabled:opacity-60">
+        @if (isSavingMetadata) {
+        <svg class="h-3.5 w-3.5 svg-spinner text-white" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>Saving...</span>
+        } @else {
+        <svg class="h-3.5 w-3.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Save Details</span>
+        }
+      </button>
+      @if (revisions.length > 1 && revisions.find((r) => Number(r.id) === selectedRevisionId)?.status ===
+      'DRAFT') {
+      <button type="button" (click)="discardDraft.emit()"
+        class="inline-flex h-8 items-center justify-center rounded-lg border border-red-200 bg-white px-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+        Discard
+      </button>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- LOCATION SELECTORS (Top) -->
+  <div class="relative grid gap-3.5 p-4 sm:p-5 lg:grid-cols-3">
+    <!-- CITY -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        Select City
+      </label>
+
+      <select [ngModel]="selectedCityId" (ngModelChange)="onCitySelect($event)"
+        class="h-9.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-medium text-slate-800 capitalize outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20">
+        <option [ngValue]="null">Select City</option>
+        @for (city of cities; track city.id) {
+        <option [ngValue]="city.id" class="capitalize">{{ city.name }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- BRANCH -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        Select Branch
+      </label>
+
+      <select [ngModel]="selectedBranchId" (ngModelChange)="onBranchSelect($event)" [disabled]="!selectedCityId"
+        class="h-9.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-medium text-slate-800 capitalize outline-none transition disabled:cursor-not-allowed disabled:opacity-50 focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20">
+        <option [ngValue]="null">Select Branch</option>
+        @for (branch of availableBranches; track branch.id) {
+        <option [ngValue]="branch.id" class="capitalize">{{ branch.name }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- CLASS -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        Select Class <span class="font-normal text-slate-500">(Optional)</span>
+      </label>
+
+      <select [ngModel]="selectedClassId" (ngModelChange)="onClassSelect($event)" [disabled]="!selectedBranchId"
+        class="h-9.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-medium text-slate-800 capitalize outline-none transition disabled:cursor-not-allowed disabled:opacity-50 focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20">
+        <option [ngValue]="null">No Class / Branch Page</option>
+        @for (item of classes; track item.id) {
+        <option [ngValue]="item.id" class="capitalize">{{ item.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- PAGE DETAILS SECTION (Displayed after selecting City, at the bottom) -->
+  @if (selectedCityId !== null || pageCreated) {
+
+  <!-- Metadata Fields -->
+  <div class="relative grid gap-3.5 p-4 sm:p-5 lg:grid-cols-2 border-t border-slate-100">
+    <!-- PAGE TITLE -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        Page Title
+      </label>
+      <input type="text" [ngModel]="pageTitle" (ngModelChange)="onTitleInput($event)" placeholder="Enter page title"
+        class="h-9.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20" />
+    </div>
+
+    <!-- SEO TITLE -->
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        SEO Title
+      </label>
+      <input type="text" [ngModel]="seoTitle" (ngModelChange)="onSeoTitleInput($event)" placeholder="Enter SEO title"
+        class="h-9.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20" />
+    </div>
+
+    <!-- SEO DESCRIPTION -->
+    <div class="lg:col-span-2">
+      <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+        SEO Description
+      </label>
+      <textarea [ngModel]="seoDescription" (ngModelChange)="onSeoDescriptionInput($event)" rows="2" placeholder="Enter SEO description"
+        class="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm font-medium text-slate-900 outline-none transition focus:border-[#8c7ae6] focus:bg-white focus:ring-2 focus:ring-[#8c7ae6]/20"></textarea>
+    </div>
+
+    <!-- ROBOTS INDEXING (INDEX / NOINDEX) -->
+    <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold text-slate-800">
+              Search Engine Indexing (Robots)
+            </label>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border shadow-2xs"
+              [class.bg-emerald-50]="isIndexed"
+              [class.text-emerald-700]="isIndexed"
+              [class.border-emerald-200]="isIndexed"
+              [class.bg-amber-50]="!isIndexed"
+              [class.text-amber-700]="!isIndexed"
+              [class.border-amber-200]="!isIndexed">
+              <span class="h-1.5 w-1.5 rounded-full" [class.bg-emerald-500]="isIndexed" [class.bg-amber-500]="!isIndexed"></span>
+              {{ isIndexed ? 'Index, Follow' : 'Noindex, Nofollow' }}
+            </span>
+          </div>
+          <p class="mt-0.5 text-[11px] text-slate-500">
+            {{ isIndexed ? 'Search engines (Google, Bing) are allowed to crawl, index and rank this landing page.' : 'Search engines are instructed NOT to index this page (useful for testing or private marketing campaigns).' }}
+          </p>
+        </div>
+
+        <!-- Toggle Switch -->
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            [attr.aria-checked]="isIndexed"
+            (click)="onIndexToggle(!isIndexed)"
+            class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:bg-slate-50 shadow-2xs cursor-pointer">
+            <span
+              class="relative inline-flex h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors duration-200"
+              [class.bg-[#8c7ae6]]="isIndexed"
+              [class.bg-slate-300]="!isIndexed">
+              <span
+                class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+                [class.translate-x-4]="isIndexed"
+                [class.translate-x-0]="!isIndexed"></span>
+            </span>
+            <span class="text-xs font-semibold" [class.text-[#8c7ae6]]="isIndexed" [class.text-slate-600]="!isIndexed">
+              {{ isIndexed ? 'Index' : 'No-Index' }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLUG PREVIEW (Compact) -->
+  <div
+    class="mx-4 mb-4 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 sm:mx-5">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="rounded bg-[#f5f3ff] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#8c7ae6]">URL</span>
+      <span class="truncate font-mono text-xs sm:text-sm font-semibold text-slate-800">{{ domainName }}{{
+        generatedSlug }}</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button type="button" (click)="openUrl.emit()" data-tooltip="Open page in new tab"
+        class="inline-flex items-center gap-1 text-xs font-bold text-[#8c7ae6] hover:text-[#7158e2] hover:underline">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        Open
+      </button>
+      <span class="text-slate-300">•</span>
+      <button type="button" (click)="copyUrl.emit()" data-tooltip="Copy page URL"
+        class="text-xs font-bold text-[#8c7ae6] hover:text-[#7158e2] hover:underline">
+        Copy
+      </button>
+      @if (pageCreated && selectedRevisionId) {
+      <span class="text-slate-300">•</span>
+      <button type="button" (click)="previewDraft.emit()" data-tooltip="Preview saved draft in Next.js"
+        class="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline">
+        <svg class="h-3.5 w-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        Preview
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- CREATE BUTTON (When page not created) -->
+  @if (!pageCreated) {
+  <div class="flex items-center justify-between border-t border-slate-100 px-4 py-3 sm:px-5">
+    <p class="text-xs text-slate-500">
+      Configure page details and create dynamic page.
+    </p>
+
+    <button type="button" (click)="create.emit()" [disabled]="!canCreatePage || isCreatingPage || pageCreated"
+      class="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-[#8c7ae6] px-5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#7158e2] disabled:opacity-50">
+      @if (isCreatingPage) {
+      <svg class="h-3.5 w-3.5 svg-spinner text-white" viewBox="0 0 24 24" fill="none">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      <span>Creating...</span>
+      } @else {
+      <span>+ Add Dynamic Page</span>
+      }
+    </button>
+  </div>
+  }
+
+  } @else {
+  <!-- NOTICE BEFORE SELECTING CITY -->
+  <div class="border-t border-slate-100 bg-slate-50/50 px-4 py-3.5 text-center sm:px-5">
+    <p class="text-xs font-medium text-slate-500">
+      Select a <strong class="text-slate-700">City</strong> above to reveal page details, SEO settings and create the page.
+    </p>
+  </div>
+  }
+</section>

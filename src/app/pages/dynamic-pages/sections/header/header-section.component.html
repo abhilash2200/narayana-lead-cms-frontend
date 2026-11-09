@@ -1,0 +1,278 @@
+<div class="space-y-6">
+
+  <!-- Header Top Section Info & Add Button -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-slate-900">
+          Header Logos
+        </h3>
+      </div>
+      <p class="mt-1 text-xs text-slate-500">
+        Upload your institution logos and control visibility for desktop and mobile navigation.
+      </p>
+    </div>
+
+    <button type="button" (click)="addLogo()"
+      class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-indigo-700">
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Another Logo
+    </button>
+  </div>
+
+  @if (uploadError) {
+  <div
+    class="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-600">
+    <span>{{ uploadError }}</span>
+    <button type="button" (click)="uploadError = null" class="font-bold text-red-400 hover:text-red-600">
+      ✕
+    </button>
+  </div>
+  }
+
+  <!-- Logos List -->
+  <div class="space-y-5">
+    @for (logo of logos; track logo.id; let idx = $index) {
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-xs transition hover:border-indigo-200">
+      <!-- Logo Header Bar -->
+      <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span
+            class="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-50 text-xs font-bold text-indigo-700">
+            {{ idx + 1 }}
+          </span>
+          <span class="text-sm font-bold text-slate-900">
+            {{ logo.name || ('Logo ' + (idx + 1)) }}
+          </span>
+          @if (logo.mediaId) {
+          <span
+            class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Media #{{ logo.mediaId }}
+          </span>
+          }
+        </div>
+
+        @if (logos.length > 1) {
+        <button type="button" (click)="deleteMediaImage(logo)"
+          [disabled]="deletingMediaId === logo.mediaId && logo.mediaId != null"
+          class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          {{ deletingMediaId === logo.mediaId && logo.mediaId != null ? 'Deleting...' : 'Delete' }}
+        </button>
+        }
+      </div>
+
+      <!-- 2-Column Responsive Form: Left Settings, Right Image Preview -->
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+
+        <!-- LEFT: Settings & Device Controls -->
+        <div class="space-y-4">
+          <!-- Logo Name -->
+          <div>
+            <label class="mb-1.5 block text-xs font-semibold text-slate-700">
+              Logo Name / Alt Text
+            </label>
+            <input type="text" [value]="logo.name" (input)="updateLogoName(logo, $event)"
+              class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10"
+              placeholder="e.g. Narayana Primary Logo" />
+            <p class="mt-1 text-xs text-slate-500">
+              Displayed as image alt text and used for internal reference.
+            </p>
+          </div>
+
+          <!-- Device Visibility Controls -->
+          <div>
+            <label class="mb-2 block text-xs font-semibold text-slate-700">
+              Device Visibility
+            </label>
+
+            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <!-- Desktop Switch -->
+              <div
+                class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition"
+                [class.border-indigo-200]="logo.desktopActive" [class.bg-indigo-50/20]="logo.desktopActive">
+                <div class="flex items-center gap-2">
+                  <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Desktop</p>
+                    <p class="text-xs text-slate-500">Show on PC / Laptop</p>
+                  </div>
+                </div>
+
+                <button type="button" role="switch" [attr.aria-checked]="logo.desktopActive" (click)="toggleDesktop(logo)"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none"
+                  [class.bg-[#8c7ae6]]="logo.desktopActive" [class.bg-slate-300]="!logo.desktopActive">
+                  <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out"
+                    [class.translate-x-4]="logo.desktopActive" [class.translate-x-0]="!logo.desktopActive"></span>
+                </button>
+              </div>
+
+              <!-- Mobile Switch -->
+              <div
+                class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition"
+                [class.border-indigo-200]="logo.mobileActive" [class.bg-indigo-50/20]="logo.mobileActive">
+                <div class="flex items-center gap-2">
+                  <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Mobile</p>
+                    <p class="text-xs text-slate-500">Show on Phones</p>
+                  </div>
+                </div>
+
+                <button type="button" role="switch" [attr.aria-checked]="logo.mobileActive" (click)="toggleMobile(logo)"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none"
+                  [class.bg-[#8c7ae6]]="logo.mobileActive" [class.bg-slate-300]="!logo.mobileActive">
+                  <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out"
+                    [class.translate-x-4]="logo.mobileActive" [class.translate-x-0]="!logo.mobileActive"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Image Upload & Live Preview -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-700">
+              Logo Image
+            </label>
+            @if (logo.imageUrl) {
+            <span class="text-[11px] font-medium text-emerald-600">
+              ✓ Active Preview
+            </span>
+            }
+          </div>
+
+          <!-- PREVIEW STATE: When image exists -->
+          @if (logo.imageUrl) {
+          <div class="space-y-2.5">
+            <!-- Image Card -->
+            <div
+              class="relative flex min-h-[140px] items-center justify-center rounded-xl border border-slate-200 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:12px_12px] p-4">
+              <img [src]="logo.imageUrl" [alt]="logo.name"
+                class="max-h-24 max-w-full rounded-md object-contain transition group-hover:scale-105" />
+
+              <!-- Quick Remove Button -->
+              <button type="button" (click)="removeImage(logo)" title="Remove current image"
+                class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-slate-500 shadow-xs border border-slate-200 transition hover:bg-red-50 hover:text-red-600">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Under & Right Details Panel -->
+            <div class="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 space-y-2">
+              <!-- Image URL Bar -->
+              <div class="flex items-center gap-2">
+                <div
+                  class="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-mono text-[11px] text-slate-600 truncate">
+                  {{ logo.imageUrl }}
+                </div>
+
+                <!-- Copy URL Button -->
+                <button type="button" (click)="copyImageUrl(logo.imageUrl)" title="Copy image URL"
+                  class="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50">
+                  <svg class="h-3 w-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  {{ copiedUrl === logo.imageUrl ? 'Copied!' : 'Copy' }}
+                </button>
+
+                <!-- Open in new tab -->
+                <a [href]="logo.imageUrl" target="_blank" rel="noopener noreferrer" title="Open original image"
+                  class="shrink-0 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 transition hover:bg-slate-50">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
+
+              <!-- Action buttons row -->
+              <div class="flex items-center justify-between pt-1">
+                <label
+                  class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-indigo-600">
+                  <svg class="h-3 w-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Replace Image
+                  <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden"
+                    (change)="onFileSelected($event, logo)" />
+                </label>
+
+                <button type="button" (click)="removeImage(logo)"
+                  class="text-xs font-medium text-red-600 hover:underline">
+                  Remove Image
+                </button>
+              </div>
+            </div>
+          </div>
+          } @else {
+          <!-- EMPTY STATE: Dropzone -->
+          <div
+            class="relative flex min-h-[140px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center transition hover:border-indigo-400 hover:bg-indigo-50/20"
+            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, logo)"
+            [class.border-indigo-500]="isDragging" [class.bg-indigo-50]="isDragging">
+            @if (uploadingLogoId === logo.id) {
+            <div class="flex flex-col items-center gap-2">
+              <svg class="h-7 w-7 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <p class="text-xs font-semibold text-slate-700">Uploading to Media Store...</p>
+            </div>
+            } @else {
+            <div
+              class="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-2xs border border-slate-200">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+
+            <p class="text-xs font-semibold text-slate-700">
+              Drag & drop logo here, or
+            </p>
+
+            <label
+              class="mt-2 cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-indigo-700">
+              Choose File
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden"
+                (change)="onFileSelected($event, logo)" />
+            </label>
+
+            <p class="mt-2 text-[10px] text-slate-400">
+              PNG, SVG, WEBP or JPG (Recommended transparent background)
+            </p>
+            }
+          </div>
+          }
+        </div>
+
+      </div>
+    </div>
+    }
+  </div>
+
+</div>

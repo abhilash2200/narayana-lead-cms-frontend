@@ -1,0 +1,308 @@
+<div class="space-y-6">
+
+  <!-- Visibility Controls -->
+  <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-sm font-semibold text-slate-900">
+          Section Visibility
+        </h3>
+
+        <p class="mt-1 text-xs text-slate-500">
+          Choose where this section should be visible.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+
+        <!-- Desktop Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="whyUs.desktopActive" (click)="toggleDesktop()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Desktop
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="whyUs.desktopActive" [class.bg-slate-300]="!whyUs.desktopActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="whyUs.desktopActive" [class.translate-x-0]="!whyUs.desktopActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ whyUs.desktopActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+        <!-- Mobile Toggle -->
+        <button type="button" role="switch" [attr.aria-checked]="whyUs.mobileActive" (click)="toggleMobile()"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:bg-slate-50">
+
+          <span class="text-xs font-semibold text-slate-600">
+            Mobile
+          </span>
+
+          <span class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200"
+            [class.bg-[#8c7ae6]]="whyUs.mobileActive" [class.bg-slate-300]="!whyUs.mobileActive">
+            <span class="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-xs transition-transform duration-200"
+              [class.translate-x-4]="whyUs.mobileActive" [class.translate-x-0]="!whyUs.mobileActive"></span>
+          </span>
+
+          <span class="text-xs font-medium text-slate-500">
+            {{ whyUs.mobileActive ? 'Show' : 'Hide' }}
+          </span>
+
+        </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Section Heading Configuration -->
+    <div class="space-y-4">
+
+      <div class="grid gap-4 md:grid-cols-3">
+
+        <!-- Prefix / Heading -->
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">
+            Heading Prefix
+          </label>
+
+          <input type="text" [(ngModel)]="whyUs.sectionHeading" (ngModelChange)="emitChange()"
+            placeholder="e.g. Why Parents Choose"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+        </div>
+
+        <!-- Highlight Word -->
+        <div>
+          <label class="mb-2 flex items-center justify-between text-sm font-semibold text-slate-700">
+            <span>Highlighted Word</span>
+            <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 uppercase">Yellow Marker</span>
+          </label>
+
+          <input type="text" [(ngModel)]="whyUs.highlightWord" (ngModelChange)="emitChange()"
+            placeholder="e.g. Narayana"
+            class="w-full rounded-xl border border-amber-300 bg-amber-50/40 px-4 py-3 text-sm font-medium text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100" />
+        </div>
+
+        <!-- Suffix -->
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">
+            Heading Suffix
+          </label>
+
+          <input type="text" [(ngModel)]="whyUs.headingSuffix" (ngModelChange)="emitChange()"
+            placeholder="e.g. Over Other Schools"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+        </div>
+
+      </div>
+
+      <!-- Section Sub Heading -->
+      <div>
+        <label class="mb-2 block text-sm font-semibold text-slate-700">
+          Section Sub Heading
+        </label>
+
+        <input type="text" [(ngModel)]="whyUs.sectionSubHeading" (ngModelChange)="emitChange()"
+          placeholder="e.g. A system built for consistency, discipline, and results."
+          class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+      </div>
+
+      <!-- Live Heading Preview -->
+      <div class="rounded-xl border border-amber-200 bg-linear-to-r from-amber-50/70 to-orange-50/50 p-4 shadow-2xs">
+        <div class="mb-1.5 flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800">Live Heading Preview</span>
+        </div>
+
+        @if (whyUs.sectionHeading || whyUs.highlightWord || whyUs.headingSuffix) {
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 leading-snug">
+            @if (whyUs.sectionHeading) {
+              <span>{{ whyUs.sectionHeading }} </span>
+            }
+            @if (whyUs.highlightWord) {
+              <span class="bg-[linear-gradient(transparent_55%,#fde047_55%)] px-1 text-gray-900">
+                {{ whyUs.highlightWord }}
+              </span>
+            }
+            @if (whyUs.headingSuffix) {
+              <span> {{ whyUs.headingSuffix }}</span>
+            }
+          </h3>
+        } @else {
+          <p class="text-sm italic text-slate-400">Heading preview will display here as you enter the fields above.</p>
+        }
+
+        @if (whyUs.sectionSubHeading) {
+          <p class="mt-1 text-xs md:text-sm text-gray-500">
+            {{ whyUs.sectionSubHeading }}
+          </p>
+        }
+      </div>
+
+    </div>
+
+    <!-- Why Choose Boxes Header -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+
+      <div>
+        <h3 class="text-base font-semibold text-slate-900">
+          Why Choose Boxes
+        </h3>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Add and manage individual reasons to choose your school.
+        </p>
+      </div>
+
+      <button type="button" (click)="addBox()"
+        class="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+        + Add Box
+      </button>
+
+    </div>
+
+    <!-- Why Choose Boxes -->
+    <div class="space-y-3">
+
+      @for (
+      box of whyUs.boxes;
+      track box.id
+      ) {
+
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+
+        <!-- Box Header -->
+        <div (click)="toggleBox(box.id)"
+          class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between cursor-pointer select-none hover:bg-slate-100/70 transition">
+
+          <div class="flex min-w-0 items-center gap-3">
+
+            <!-- Icon Thumbnail / Number -->
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 overflow-hidden text-sm font-bold text-slate-600">
+              @if (box.image) {
+                <img [src]="box.image" [alt]="box.heading || 'Icon'" class="h-6 w-6 object-contain" />
+              } @else {
+                {{ $index + 1 }}
+              }
+            </div>
+
+            <!-- Box Info -->
+            <div class="min-w-0">
+
+              <h4 class="truncate text-sm font-semibold text-slate-900">
+                {{
+                box.heading ||
+                'Untitled Card'
+                }}
+              </h4>
+
+              <p class="mt-0.5 text-xs text-slate-500">
+                Reason Card #{{ $index + 1 }}
+              </p>
+
+            </div>
+
+          </div>
+
+          <div class="flex shrink-0 items-center gap-2">
+
+            <!-- Remove -->
+            <button type="button" (click)="$event.stopPropagation(); removeBox(box.id)"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50">
+              Remove
+            </button>
+
+            <!-- Arrow Indicator -->
+            <div class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+              <svg class="h-4 w-4 transition-transform duration-200" [class.rotate-180]="isBoxOpen(box.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Box Content -->
+        @if (isBoxOpen(box.id)) {
+
+        <div class="border-t border-slate-200 bg-white p-5 animate-fadeIn">
+
+          <div class="space-y-5">
+
+            <!-- Image / Icon -->
+            <app-image-upload label="Card Icon / Image" description="Upload card icon (recommended 80x80 SVG or PNG)"
+              [imagePreview]="box.image" [mediaId]="box.mediaId"
+              (imageChange)="onBoxImageChange(box.id, $event)"
+              (mediaIdChange)="onBoxMediaIdChange(box.id, $event)" />
+
+            <!-- Title / Heading -->
+            <div>
+
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                Card Title
+              </label>
+
+              <input type="text" [(ngModel)]="box.heading" (ngModelChange)="emitChange()"
+                placeholder="Integrated Curriculum"
+                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+
+            </div>
+
+            <!-- Description / Paragraph -->
+            <div>
+
+              <label class="mb-2 block text-sm font-semibold text-slate-700">
+                Card Description
+              </label>
+
+              <textarea rows="4" [(ngModel)]="box.paragraph" (ngModelChange)="emitChange()"
+                placeholder="Write a clear description of this key benefit."
+                class="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"></textarea>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        }
+
+      </div>
+
+      }
+
+      <!-- Empty State -->
+      @if (whyUs.boxes.length === 0) {
+
+      <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+
+        <h4 class="text-sm font-semibold text-slate-800">
+          No Why Choose Boxes Added
+        </h4>
+
+        <p class="mt-1 text-sm text-slate-500">
+          Click "Add Box" to create your first box.
+        </p>
+
+        <button type="button" (click)="addBox()"
+          class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+          + Add Box
+        </button>
+
+      </div>
+
+      }
+
+    </div>
+
+  </div>
