@@ -59,9 +59,10 @@ function getEnv(key, defaultValue = '') {
 
 const apiBaseUrl = getEnv('API_BASE_URL', '/api/v1/backend');
 const tokenStorageKey = getEnv('TOKEN_STORAGE_KEY', 'auth_token');
-const publicWebBaseUrl = getEnv('PUBLIC_WEB_BASE_URL', 'https://wbnarayanaschools.in');
-const previewBaseUrl = getEnv('PREVIEW_BASE_URL', 'http://localhost:3000');
+const publicWebBaseUrl = getEnv('PUBLIC_WEB_BASE_URL', 'https://wb-next-narayana-alpha.vercel.app');
+const previewBaseUrl = getEnv('PREVIEW_BASE_URL', 'https://wb-next-narayana-alpha.vercel.app');
 const mediaCdnBaseUrl = getEnv('MEDIA_CDN_BASE_URL', 'https://apiframework.wbnarayanaschools.in');
+const cmsBaseUrl = getEnv('CMS_BASE_URL', 'https://narayana-lead-cms-frontend-inky.vercel.app');
 
 if (!fs.existsSync(environmentsDir)) {
   fs.mkdirSync(environmentsDir, { recursive: true });
@@ -79,6 +80,7 @@ export const environment = {
   publicWebBaseUrl: '${publicWebBaseUrl}',
   previewBaseUrl: '${previewBaseUrl}',
   mediaCdnBaseUrl: '${mediaCdnBaseUrl}',
+  cmsBaseUrl: '${cmsBaseUrl}',
 };
 `;
 
@@ -91,6 +93,7 @@ export const environment = {
   publicWebBaseUrl: '${publicWebBaseUrl}',
   previewBaseUrl: '${previewBaseUrl}',
   mediaCdnBaseUrl: '${mediaCdnBaseUrl}',
+  cmsBaseUrl: '${cmsBaseUrl}',
 };
 `;
 
@@ -104,3 +107,4 @@ console.log(`  - TOKEN_STORAGE_KEY: ${tokenStorageKey}`);
 console.log(`  - PUBLIC_WEB_BASE_URL: ${publicWebBaseUrl}`);
 console.log(`  - PREVIEW_BASE_URL: ${previewBaseUrl}`);
 console.log(`  - MEDIA_CDN_BASE_URL: ${mediaCdnBaseUrl}`);
+console.log(`  - CMS_BASE_URL: ${cmsBaseUrl}`);

@@ -5,7 +5,8 @@ export const environment = {
   production: false,
   apiBaseUrl: '/api/v1/backend',
   tokenStorageKey: 'auth_token',
-  publicWebBaseUrl: 'https://wbnarayanaschools.in',
-  previewBaseUrl: 'http://localhost:3000',
+  publicWebBaseUrl: 'https://wb-next-narayana-alpha.vercel.app',
+  previewBaseUrl: 'https://wb-next-narayana-alpha.vercel.app',
   mediaCdnBaseUrl: 'https://apiframework.wbnarayanaschools.in',
+  cmsBaseUrl: 'https://narayana-lead-cms-frontend-inky.vercel.app',
 };
