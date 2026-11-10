@@ -3,6 +3,7 @@ import { WhyUsConfig } from '../../sections/why-us/why-us';
 import { CourseConfig } from '../../sections/course/course.component';
 import { RightSchoolConfig } from '../../sections/right-school/right-school.component';
 import { PageBuilderSection } from '../../../../services/dynamic-page.service';
+import { sanitizeUrl } from './header-banner-classes.serializer';
 
 export function buildWhyUsSection(
   whyUs: Partial<WhyUsConfig>,
@@ -22,19 +23,20 @@ export function buildWhyUsSection(
     content: {
       heading: fullHeading || (whyUs.sectionHeading ?? '').trim() || 'Why Choose Narayana',
       subheading: (whyUs.sectionSubHeading ?? '').trim() || 'A system built for consistency, discipline, and results.',
-      highlight_word: (whyUs.highlightWord ?? '').trim(),
-      heading_suffix: (whyUs.headingSuffix ?? '').trim(),
-      desktop_active: whyUs.desktopActive ?? true,
-      mobile_active: whyUs.mobileActive ?? true,
       items: whyUsBoxes
         .filter((b) => (b.heading || b.paragraph || '').trim().length > 0)
-        .map((b, idx) => ({
-          title: (b.heading ?? '').trim(),
-          description: (b.paragraph ?? '').trim(),
-          icon_media_id: b.mediaId !== undefined && b.mediaId !== null ? Number(b.mediaId) : null,
-          icon_alt: (b.heading ?? '').trim(),
-          sort_order: idx + 1,
-        })),
+        .map((b, idx) => {
+          const parsedMediaId = Number(b.mediaId);
+          const iconMediaId = Number.isInteger(parsedMediaId) && parsedMediaId > 0 ? parsedMediaId : 1;
+          const title = (b.heading ?? '').trim() || `Advantage ${idx + 1}`;
+          return {
+            title,
+            description: (b.paragraph ?? '').trim() || 'A system built for consistency, discipline, and results.',
+            icon_media_id: iconMediaId,
+            icon_alt: title,
+            sort_order: idx + 1,
+          };
+        }),
     },
   };
 }
@@ -111,7 +113,7 @@ export function buildCoursesSection(
         code: `COURSE_${idx + 1}`,
         name: (c.heading || `Course Program ${idx + 1}`).trim(),
         class_range: (c.classRange || '').trim(),
-        desktop_primary_media_id: desktopPrimaryMediaId,
+        desktop_primary_media_id: desktopPrimaryMediaId && desktopPrimaryMediaId > 0 ? desktopPrimaryMediaId : 1,
         desktop_secondary_media_id: desktopSecondaryMediaId,
         mobile_media_id: mobileMediaId,
         image_alt: c.heading || 'Course Image',
@@ -122,17 +124,17 @@ export function buildCoursesSection(
         fees_cta: {
           label: (c.buttonText1 || 'Get Fee Structure').trim(),
           action: 'FEES_STRUCTURE',
-          url: c.buttonUrl1 ? c.buttonUrl1.trim() : null,
+          url: sanitizeUrl(c.buttonUrl1),
         },
         brochure_cta: {
           label: (c.buttonText2 || 'Download Brochure').trim(),
           action: 'DOWNLOAD_BROCHURE',
-          url: c.buttonUrl2 ? c.buttonUrl2.trim() : null,
+          url: sanitizeUrl(c.buttonUrl2),
         },
         callback_cta: {
           label: (c.buttonText3 || 'Get Call Back for Your Query').trim(),
           action: 'CALLBACK',
-          url: c.buttonUrl3 ? c.buttonUrl3.trim() : null,
+          url: sanitizeUrl(c.buttonUrl3),
         },
         sort_order: idx + 1,
       };

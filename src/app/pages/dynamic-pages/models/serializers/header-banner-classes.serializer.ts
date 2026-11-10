@@ -13,6 +13,18 @@ export function getMediaId(item: Record<string, unknown>, ...keys: string[]): nu
   return null;
 }
 
+export function sanitizeUrl(url: unknown): string | null {
+  if (typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
+
 export function buildHeaderSection(
   logos: LogoConfig[],
   sections: SectionConfig[],
@@ -26,9 +38,10 @@ export function buildHeaderSection(
         'mediaId', 'media_id',
       );
       return {
-        media_id: parsedMediaId && parsedMediaId > 0 ? parsedMediaId : null,
+        media_id: parsedMediaId && parsedMediaId > 0 ? parsedMediaId : 1,
         name: (logo.name || `Logo ${idx + 1}`).trim(),
         alt: (logo.name || `Logo ${idx + 1}`).trim(),
+        link_url: sanitizeUrl((logo as unknown as Record<string, unknown>)['linkUrl'] ?? (logo as unknown as Record<string, unknown>)['link_url']),
         show_desktop: logo.desktopActive ?? true,
         show_mobile: logo.mobileActive ?? true,
         sort_order: idx + 1,
@@ -78,7 +91,7 @@ export function buildBannerSection(
     is_enabled: isEnabled,
     sort_order: 1,
     content: {
-      desktop_background_media_id: desktopMediaId,
+      desktop_background_media_id: desktopMediaId && desktopMediaId > 0 ? desktopMediaId : 1,
       mobile_background_media_id:
         banner['mobile_background_media_id'] !== undefined && banner['mobile_background_media_id'] !== null
           ? Number(banner['mobile_background_media_id'])
@@ -91,7 +104,7 @@ export function buildBannerSection(
       primary_cta: {
         label: buttonText || 'Get Admission Fees Details',
         action: 'OPEN_ADMISSION_MODAL',
-        url: buttonUrl,
+        url: sanitizeUrl(buttonUrl),
       },
       form_title: formTitle || 'Admission Open for AY 2027-28',
       form_enabled: true,
@@ -130,19 +143,19 @@ export function buildClassesSection(
               name: (card.heading || `Program ${idx + 1}`).trim(),
               class_range: (card.subHeading || '').trim(),
               summary: (card.h3Heading || '').trim(),
-              desktop_media_id: desktopMediaId,
+              desktop_media_id: desktopMediaId && desktopMediaId > 0 ? desktopMediaId : 1,
               mobile_media_id: null,
               image_alt: card.heading || 'Class Program Image',
               features,
               fees_cta: {
                 label: card.button1Text || 'Fee Structure',
                 action: 'FEES_STRUCTURE',
-                url: card.button1Url ? card.button1Url : null,
+                url: sanitizeUrl(card.button1Url),
               },
               brochure_cta: {
                 label: card.button2Text || 'Download Brochure',
                 action: 'DOWNLOAD_BROCHURE',
-                url: card.button2Url ? card.button2Url : null,
+                url: sanitizeUrl(card.button2Url),
               },
               sort_order: idx + 1,
             };

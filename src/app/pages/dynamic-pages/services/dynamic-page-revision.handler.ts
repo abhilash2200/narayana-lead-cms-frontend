@@ -49,15 +49,23 @@ export class DynamicPageRevisionHandler {
           message: res.message || 'All sections saved successfully.',
           data: res.data,
         })),
-        catchError((err: { error?: { message?: string; details?: unknown }; message?: string }) =>
-          of({
+        catchError((err: { error?: { message?: string; details?: unknown; error?: { message?: string; details?: unknown } }; message?: string }) => {
+          let errorMsg = err.error?.message || err.error?.error?.message || err.message || 'Failed to save page sections.';
+          const rawDetails = err.error?.details || err.error?.error?.details;
+          if (rawDetails && typeof rawDetails === 'object') {
+            const detailEntries = Object.entries(rawDetails);
+            if (detailEntries.length > 0) {
+              const detailsFormatted = detailEntries
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : JSON.stringify(v)}`)
+                .join('; ');
+              errorMsg = `${errorMsg} (${detailsFormatted})`;
+            }
+          }
+          return of({
             success: false,
-            message:
-              err.error?.message ||
-              err.message ||
-              'Failed to save page sections.',
-          })
-        )
+            message: errorMsg,
+          });
+        })
       );
   }
 
@@ -79,15 +87,23 @@ export class DynamicPageRevisionHandler {
           message: res.message || `${section.section_type} saved successfully.`,
           data: res.data,
         })),
-        catchError((err: { error?: { message?: string }; message?: string }) =>
-          of({
+        catchError((err: { error?: { message?: string; details?: unknown; error?: { message?: string; details?: unknown } }; message?: string }) => {
+          let errorMsg = err.error?.message || err.error?.error?.message || err.message || `Failed to save ${section.section_type} section.`;
+          const rawDetails = err.error?.details || err.error?.error?.details;
+          if (rawDetails && typeof rawDetails === 'object') {
+            const detailEntries = Object.entries(rawDetails);
+            if (detailEntries.length > 0) {
+              const detailsFormatted = detailEntries
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : JSON.stringify(v)}`)
+                .join('; ');
+              errorMsg = `${errorMsg} (${detailsFormatted})`;
+            }
+          }
+          return of({
             success: false,
-            message:
-              err.error?.message ||
-              err.message ||
-              `Failed to save ${section.section_type} section.`,
-          })
-        )
+            message: errorMsg,
+          });
+        })
       );
   }
 

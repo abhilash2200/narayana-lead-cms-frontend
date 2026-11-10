@@ -58,12 +58,12 @@ export function buildLimitedSeatsSection(
     is_enabled: isEnabled,
     sort_order: 10,
     content: {
-      background_media_id: bgMediaId,
+      background_media_id: bgMediaId && bgMediaId > 0 ? bgMediaId : 1,
       background_alt: 'Limited Seats Background',
-      feature_media_id: featMediaId,
+      feature_media_id: featMediaId && featMediaId > 0 ? featMediaId : 1,
       feature_image_alt: 'Admissions Open Banner',
-      availability_text: (limitedSeats.subHeading || '').trim(),
-      urgency_text: (limitedSeats.heading || '').trim(),
+      availability_text: (limitedSeats.subHeading || '').trim() || 'Limited Seats Available for 2026-27',
+      urgency_text: (limitedSeats.heading || '').trim() || 'Admissions Closing Soon',
       brochure_cta: {
         label: limitedSeats.buttonText || 'Download Brochure',
         action: 'DOWNLOAD_BROCHURE',
@@ -74,13 +74,14 @@ export function buildLimitedSeatsSection(
       default_form_intent: 'ENQUIRY',
       statistics: cards.map((card, idx) => {
         const rawCardMedia = card.mediaId;
-        const cardMediaId = Number.isInteger(Number(rawCardMedia)) && Number(rawCardMedia) > 0 ? Number(rawCardMedia) : null;
+        const cardMediaId = Number.isInteger(Number(rawCardMedia)) && Number(rawCardMedia) > 0 ? Number(rawCardMedia) : 1;
+        const title = (card.title || '').trim() || `Stat ${idx + 1}`;
         return {
           logo_media_id: cardMediaId,
           logo_alt: card.title || 'School Logo',
-          title: (card.title || '').trim(),
-          label: (card.label || '').trim(),
-          value: (card.value || '').trim(),
+          title,
+          label: (card.label || '').trim() || 'Key Metric',
+          value: (card.value || '').trim() || '100%',
           sort_order: idx + 1,
         };
       }),
