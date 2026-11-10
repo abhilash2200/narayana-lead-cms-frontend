@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -38,6 +39,7 @@ export interface ClassesConfig {
 @Component({
   selector: 'app-classes-section',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ImageUploadComponent,

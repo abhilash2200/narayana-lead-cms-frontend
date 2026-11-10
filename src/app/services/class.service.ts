@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, shareReplay, tap } from 'rxjs';
 import { ApiService } from '../core/services/api.service';
 import { API_ENDPOINTS } from '../core/constants/api-endpoints';
 import { ApiResponse } from '../core/models/api-response.model';
@@ -55,15 +55,35 @@ export type DeleteClassResponse = ApiResponse<null>;
 })
 export class ClassService {
   private readonly api = inject(ApiService);
+  private classesCache = new Map<string, Observable<ClassListResponse>>();
 
   /**
-   * Fetch all class records, optionally with search or pagination parameters
+   * Fetch all class records (cached in-memory per query signature)
    */
   getClasses(params?: ClassQueryParams): Observable<ClassListResponse> {
-    return this.api.get<ClassListResponse>(
-      API_ENDPOINTS.CLASSES.BASE,
-      params as Record<string, unknown>
-    );
+    const cacheKey = JSON.stringify(params || {});
+    let cached$ = this.classesCache.get(cacheKey);
+    if (!cached$) {
+      cached$ = this.api.get<ClassListResponse>(
+        API_ENDPOINTS.CLASSES.BASE,
+        params as Record<string, unknown>
+      ).pipe(
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError((err) => {
+          this.classesCache.delete(cacheKey);
+          throw err;
+        })
+      );
+      this.classesCache.set(cacheKey, cached$);
+    }
+    return cached$;
+  }
+
+  /**
+   * Manually invalidate all cached class queries
+   */
+  clearCache(): void {
+    this.classesCache.clear();
   }
 
   /**
@@ -77,20 +97,26 @@ export class ClassService {
    * Create a new class
    */
   createClass(payload: CreateClassRequest): Observable<CreateClassResponse> {
-    return this.api.post<CreateClassResponse>(API_ENDPOINTS.CLASSES.BASE, payload);
+    return this.api.post<CreateClassResponse>(API_ENDPOINTS.CLASSES.BASE, payload).pipe(
+      tap(() => this.clearCache())
+    );
   }
 
   /**
    * Update class by ID
    */
   updateClass(id: number | string, payload: UpdateClassRequest): Observable<UpdateClassResponse> {
-    return this.api.put<UpdateClassResponse>(API_ENDPOINTS.CLASSES.BY_ID(id), payload);
+    return this.api.put<UpdateClassResponse>(API_ENDPOINTS.CLASSES.BY_ID(id), payload).pipe(
+      tap(() => this.clearCache())
+    );
   }
 
   /**
    * Delete class by ID
    */
   deleteClass(id: number | string): Observable<DeleteClassResponse> {
-    return this.api.delete<DeleteClassResponse>(API_ENDPOINTS.CLASSES.BY_ID(id));
+    return this.api.delete<DeleteClassResponse>(API_ENDPOINTS.CLASSES.BY_ID(id)).pipe(
+      tap(() => this.clearCache())
+    );
   }
 }

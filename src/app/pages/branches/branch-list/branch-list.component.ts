@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnDestroy,
@@ -20,6 +21,7 @@ import { TopbarComponent } from '../../../components/topbar/topbar.component';
 @Component({
   selector: 'app-branch-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SidebarComponent, TopbarComponent, FormsModule],
   templateUrl: './branch-list.component.html',
 })

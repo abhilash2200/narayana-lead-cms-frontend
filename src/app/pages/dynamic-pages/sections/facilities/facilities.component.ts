@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -27,6 +28,7 @@ export interface FacilitiesConfig {
 @Component({
   selector: 'app-facilities-section',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ImageUploadComponent,

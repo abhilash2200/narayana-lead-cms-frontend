@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdsDashboardCalculationResult } from '../../models/ads-dashboard.model';
 
 @Component({
   selector: 'app-dashboard-attribution-sidebar',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: './dashboard-attribution-sidebar.component.html',
 })

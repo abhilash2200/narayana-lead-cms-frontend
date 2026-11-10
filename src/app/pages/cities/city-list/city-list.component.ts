@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnDestroy,
@@ -16,6 +17,7 @@ import { TopbarComponent } from '../../../components/topbar/topbar.component';
 @Component({
   selector: 'app-city-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SidebarComponent, TopbarComponent, FormsModule],
   templateUrl: './city-list.component.html',
 })

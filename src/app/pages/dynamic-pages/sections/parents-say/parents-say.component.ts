@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -27,6 +28,7 @@ export interface ParentsSayConfig {
 @Component({
   selector: 'app-parents-say',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ImageUploadComponent,
   ],

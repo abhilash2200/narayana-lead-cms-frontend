@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   EventEmitter,
@@ -24,6 +25,7 @@ export interface LogoConfig {
 @Component({
   selector: 'app-header-section',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './header-section.component.html',
 })
 export class HeaderSectionComponent implements OnInit, OnChanges {

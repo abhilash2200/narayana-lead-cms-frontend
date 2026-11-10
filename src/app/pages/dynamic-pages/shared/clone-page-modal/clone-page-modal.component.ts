@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   EventEmitter,
@@ -64,6 +65,7 @@ export interface SourcePageSummary {
 @Component({
   selector: 'app-clone-page-modal',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: './clone-page-modal.component.html',
 })

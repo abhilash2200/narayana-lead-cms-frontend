@@ -189,7 +189,7 @@
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-slate-200 overflow-hidden text-sm font-bold text-slate-600">
               @if (box.image) {
-                <img [src]="box.image" [alt]="box.heading || 'Icon'" class="h-6 w-6 object-contain" />
+                <img [src]="box.image" [alt]="box.heading || 'Icon'" loading="lazy" decoding="async" class="h-6 w-6 object-contain" />
               } @else {
                 {{ $index + 1 }}
               }

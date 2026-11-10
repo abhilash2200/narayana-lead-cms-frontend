@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -46,6 +47,7 @@ export interface LimitedSeatsConfig {
 @Component({
   selector: 'app-limited-seats-section',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     ImageUploadComponent,

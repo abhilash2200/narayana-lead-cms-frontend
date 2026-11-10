@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, shareReplay } from 'rxjs';
 import { ApiService } from '../core/services/api.service';
 import { API_ENDPOINTS } from '../core/constants/api-endpoints';
 import { ApiResponse } from '../core/models/api-response.model';
@@ -137,21 +137,62 @@ export interface LeadDetailResponse {
 })
 export class LeadService {
   private readonly api = inject(ApiService);
+  private modulesCache$?: Observable<LeadModulesResponse>;
+  private filterOptionsCache = new Map<string, Observable<LeadFilterOptionsResponse>>();
 
   /**
-   * Fetch all supported Lead List navigation modules
+   * Fetch all supported Lead List navigation modules (cached in-memory)
    * GET /api/v1/backend/leads/modules
    */
   getModules(): Observable<LeadModulesResponse> {
-    return this.api.get<LeadModulesResponse>(API_ENDPOINTS.LEADS.MODULES);
+    if (!this.modulesCache$) {
+      this.modulesCache$ = this.api.get<LeadModulesResponse>(API_ENDPOINTS.LEADS.MODULES).pipe(
+        shareReplay({ bufferSize: 1, refCount: false }),
+        catchError((err) => {
+          this.modulesCache$ = undefined;
+          throw err;
+        })
+      );
+    }
+    return this.modulesCache$;
   }
 
   /**
-   * Fetch distinct filter options for a module
+   * Invalidate modules cache
+   */
+  clearModulesCache(): void {
+    this.modulesCache$ = undefined;
+  }
+
+  /**
+   * Fetch distinct filter options for a module (cached per moduleKey)
    * GET /api/v1/backend/leads/filter-options?module={moduleKey}
    */
   getFilterOptions(module: string): Observable<LeadFilterOptionsResponse> {
-    return this.api.get<LeadFilterOptionsResponse>(API_ENDPOINTS.LEADS.FILTER_OPTIONS, { module });
+    const cached$ = this.filterOptionsCache.get(module);
+    if (cached$) {
+      return cached$;
+    }
+    const request$ = this.api.get<LeadFilterOptionsResponse>(API_ENDPOINTS.LEADS.FILTER_OPTIONS, { module }).pipe(
+      shareReplay({ bufferSize: 1, refCount: false }),
+      catchError((err) => {
+        this.filterOptionsCache.delete(module);
+        throw err;
+      })
+    );
+    this.filterOptionsCache.set(module, request$);
+    return request$;
+  }
+
+  /**
+   * Invalidate filter options cache
+   */
+  clearFilterOptionsCache(module?: string): void {
+    if (module) {
+      this.filterOptionsCache.delete(module);
+    } else {
+      this.filterOptionsCache.clear();
+    }
   }
 
   /**

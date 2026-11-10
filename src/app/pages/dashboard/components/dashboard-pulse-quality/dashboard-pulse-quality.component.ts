@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   AdsDashboardCalculationResult,
@@ -8,6 +8,7 @@ import {
 @Component({
   selector: 'app-dashboard-pulse-quality',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   templateUrl: './dashboard-pulse-quality.component.html',
 })

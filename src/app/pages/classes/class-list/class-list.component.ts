@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnDestroy,
@@ -16,6 +17,7 @@ import { TopbarComponent } from '../../../components/topbar/topbar.component';
 @Component({
   selector: 'app-class-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SidebarComponent, TopbarComponent, FormsModule],
   templateUrl: './class-list.component.html',
 })

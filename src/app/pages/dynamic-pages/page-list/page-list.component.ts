@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DynamicPage } from '../models/dynamic-page.model';
 import { City } from '../../../services/city.service';
@@ -9,6 +9,7 @@ import { PageQueryParams } from '../../../services/dynamic-page.service';
 @Component({
   selector: 'app-page-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule],
   templateUrl: './page-list.component.html',
 })

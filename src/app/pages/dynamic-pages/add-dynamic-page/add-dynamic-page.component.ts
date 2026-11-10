@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   OnInit,
@@ -72,6 +73,7 @@ import { TopbarComponent } from '../../../components/topbar/topbar.component';
 @Component({
   selector: 'app-add-dynamic-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     SidebarComponent,

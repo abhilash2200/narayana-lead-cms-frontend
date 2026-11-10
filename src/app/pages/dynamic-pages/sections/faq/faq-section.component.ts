@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -24,6 +25,7 @@ export interface FaqConfig {
 @Component({
   selector: 'app-faq-section',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule],
   templateUrl: './faq-section.component.html',
   styles: `

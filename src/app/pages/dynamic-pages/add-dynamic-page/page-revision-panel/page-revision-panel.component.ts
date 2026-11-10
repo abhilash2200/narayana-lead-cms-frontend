@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PageRevision } from '../../models/dynamic-page-builder.types';
@@ -7,6 +7,7 @@ import { SectionConfig } from '../../models/dynamic-page.model';
 @Component({
   selector: 'app-page-revision-panel',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   templateUrl: './page-revision-panel.component.html',
 })

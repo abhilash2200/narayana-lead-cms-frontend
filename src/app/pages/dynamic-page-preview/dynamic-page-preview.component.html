@@ -134,7 +134,7 @@
           @for (image of galleryImages; track image) {
           <div class="aspect-square overflow-hidden rounded-lg bg-slate-100">
             @if (image) {
-            <img [src]="image" alt="Gallery" class="h-full w-full object-cover" />
+            <img [src]="image" alt="Gallery" loading="lazy" decoding="async" class="h-full w-full object-cover" />
             }
           </div>
           }
