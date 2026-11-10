@@ -4,6 +4,7 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import {
   ActivatedRoute,
   Router,
@@ -46,6 +47,7 @@ export class EditClassComponent implements OnInit, OnDestroy {
   toastMessage = '';
   toastType: 'success' | 'warning' | 'error' = 'success';
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private routeSub?: Subscription;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -55,7 +57,7 @@ export class EditClassComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.routeSub = this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
 
       if (!id) {
@@ -71,6 +73,7 @@ export class EditClassComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     if (this.toastTimer) {
       clearTimeout(this.toastTimer);
     }

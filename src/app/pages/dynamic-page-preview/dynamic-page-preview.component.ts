@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { DynamicPageService } from '../../services/dynamic-page.service';
 
 interface SectionItem {
@@ -14,11 +15,12 @@ interface SectionItem {
   standalone: true,
   templateUrl: './dynamic-page-preview.component.html',
 })
-export class DynamicPagePreviewComponent implements OnInit {
+export class DynamicPagePreviewComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dynamicPageService = inject(DynamicPageService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private routeSub?: Subscription;
 
   pageId: number | null = null;
   pageSlug = '';
@@ -54,7 +56,7 @@ export class DynamicPagePreviewComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.routeSub = this.route.paramMap.subscribe((params) => {
       const idParam = params.get('id');
       const slugParam = params.get('slug');
 
@@ -71,6 +73,10 @@ export class DynamicPagePreviewComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
   }
 
   private loadPageData(id: number): void {

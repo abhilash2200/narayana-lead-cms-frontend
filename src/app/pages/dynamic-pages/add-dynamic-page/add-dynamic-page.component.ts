@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
   inject,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 import { HeaderSectionComponent } from '../sections/header/header-section.component';
 import { BannerSectionComponent } from '../sections/banner/banner-section.component';
@@ -97,7 +99,7 @@ import { TopbarComponent } from '../../../components/topbar/topbar.component';
   ],
   templateUrl: './add-dynamic-page.component.html',
 })
-export class AddDynamicPageComponent implements OnInit {
+export class AddDynamicPageComponent implements OnInit, OnDestroy {
   protected readonly Number = Number;
 
   private readonly router = inject(Router);
@@ -111,6 +113,7 @@ export class AddDynamicPageComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly accordion = new DynamicPageAccordionManager();
+  private routeSub?: Subscription;
 
   readonly domainName = environment.publicWebBaseUrl;
 
@@ -219,7 +222,7 @@ export class AddDynamicPageComponent implements OnInit {
   }
 
   private handleRouteParams(): void {
-    this.route.paramMap.subscribe((params) => {
+    this.routeSub = this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id === null) {
         this.resetAddPage();
@@ -234,6 +237,10 @@ export class AddDynamicPageComponent implements OnInit {
       this.createdPageId = pageId;
       this.loadPageBuilderData();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
   }
 
   onCityChange(): void {

@@ -4,6 +4,7 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import {
   ActivatedRoute,
   Router,
@@ -57,6 +58,7 @@ export class EditBranchComponent implements OnInit, OnDestroy {
   toastType: 'success' | 'error' = 'success';
   showToast = false;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private routeSub?: Subscription;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -69,7 +71,7 @@ export class EditBranchComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCities();
 
-    this.route.paramMap.subscribe((params) => {
+    this.routeSub = this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
 
       if (!id) {
@@ -84,6 +86,7 @@ export class EditBranchComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     if (this.toastTimer) {
       clearTimeout(this.toastTimer);
     }
