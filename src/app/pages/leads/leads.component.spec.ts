@@ -63,6 +63,7 @@ describe('LeadsComponent', () => {
       expect(params['exclude_search']).toBe('test');
       expect(params['name']).toBe('Test Parent');
       expect(params['phone']).toBe('9876543210');
+      expect(params['phone_mode']).toBe('all');
       expect(params['city']).toBe('Kolkata');
       expect(params['board']).toBe('CBSE');
       expect(component.hasActiveFilters).toBe(true);
@@ -83,8 +84,8 @@ describe('LeadsComponent', () => {
 
     it('should dynamically generate advancedFilterGroups for any additive backend filter keys', () => {
       component.filterOptions = {
-        city: ['Kolkata', 'Howrah'], // primary - should be excluded from advanced groups
-        cities: ['Kolkata', 'Howrah'], // primary - should also be excluded
+        city: ['Kolkata', 'Howrah'],
+        cities: ['Kolkata', 'Howrah'],
         board: ['CBSE', 'ICSE'],
         stream: ['Science', 'Commerce'], // newly added by backend
         academic_session: ['2026-27'], // newly added by backend
@@ -94,11 +95,11 @@ describe('LeadsComponent', () => {
       const groups = component.advancedFilterGroups;
       const keys = groups.map((g) => g.key);
 
+      expect(keys).toContain('city');
+      expect(keys).toContain('cities');
       expect(keys).toContain('board');
       expect(keys).toContain('stream');
       expect(keys).toContain('academic_session');
-      expect(keys).not.toContain('city');
-      expect(keys).not.toContain('cities');
       expect(keys).not.toContain('empty_list');
 
       // Check formatted labels
@@ -363,8 +364,99 @@ describe('LeadsComponent', () => {
       expect(exportedParams.exclude_search).toBe('dummy');
       expect(exportedParams.name).toBe('Priya Sharma');
       expect(exportedParams.phone).toBe('9876543210');
+      expect(exportedParams.phone_mode).toBe('all');
       expect(exportedParams.sort_by).toBe('entrydate');
       expect(exportedParams.sort_order).toBe('desc');
+    });
+
+    it('should export with custom phone_mode', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.phoneMode = 'duplicates_only';
+
+      let exportedParams: any = null;
+      vi.spyOn(leadService, 'exportLeads').mockImplementation((params) => {
+        exportedParams = params;
+        return of(new Blob(['id,name\n1,Priya'], { type: 'text/csv' }));
+      });
+
+      component.exportCsv();
+
+      expect(exportedParams).toBeTruthy();
+      expect(exportedParams.phone_mode).toBe('duplicates_only');
+      expect(exportedParams.page).toBeUndefined();
+      expect(exportedParams.per_page).toBeUndefined();
+    });
+  });
+
+  describe('Phone Mode & Duplicate Inspection', () => {
+    it('should change phone mode and refresh leads', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.onPhoneModeChange('unique');
+
+      expect(component.phoneMode).toBe('unique');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(component.hasActiveFilters).toBe(true);
+    });
+
+    it('should inspect duplicate phone by setting exactPhone and resetting phoneMode to all', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.phoneMode = 'duplicates_only';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.inspectDuplicatePhone('9000000000');
+
+      expect(component.exactPhone).toBe('9000000000');
+      expect(component.phoneMode).toBe('all');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+    });
+
+    it('should clear exactPhone filter and refresh leads', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.exactPhone = '9000000000';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.clearExactPhoneFilter();
+
+      expect(component.exactPhone).toBe('');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Exclude Test Toggle & Metrics', () => {
+    it('should toggle excludeTest and set excludeSearchTerm', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      expect(component.excludeTest).toBe(false);
+      component.toggleExcludeTest();
+
+      expect(component.excludeTest).toBe(true);
+      expect(component.excludeSearchTerm).toBe('test');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(component.hasActiveFilters).toBe(true);
+
+      component.toggleExcludeTest();
+      expect(component.excludeTest).toBe(false);
+      expect(component.excludeSearchTerm).toBe('');
+    });
+
+    it('should compute testLeadsCount and duplicateLeadsCount correctly', () => {
+      component.leads = [
+        { id: 1, name: 'ABC Test', phone: '9000000001', otp_validation: 'VALID', entrydate: '2026-11-10 10:00:00', parent_email: 'p1@example.com' },
+        { id: 2, name: 'John Doe', phone: '9000000002', otp_validation: 'VALID', duplicate_count: 2, entrydate: '2026-11-10 10:00:00', parent_email: 'p2@example.com' },
+        { id: 3, name: 'Regular User', phone: '9000000003', otp_validation: 'INVALID', entrydate: '2026-11-10 10:00:00', parent_email: 'p3@example.com' },
+      ];
+
+      expect(component.testLeadsCount).toBe(1);
+      expect(component.duplicateLeadsCount).toBe(1);
+      expect(component.isLeadTest(component.leads[0])).toBe(true);
+      expect(component.isLeadTest(component.leads[1])).toBe(false);
     });
   });
 });

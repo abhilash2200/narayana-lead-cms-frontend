@@ -68,7 +68,7 @@ describe('ClonePageModalComponent', () => {
     component.targetCityId = 6;
     component.onCityChange();
 
-    expect(branchService.getBranches).toHaveBeenCalledWith({ city_id: 6, limit: 500 });
+    expect(branchService.getBranches).toHaveBeenCalledWith({ city_id: 6, per_page: 100, limit: 100 });
     expect(component.availableBranches.length).toBe(4);
     expect(component.availableBranches.map((b) => b.name)).toEqual([
       'Andal',

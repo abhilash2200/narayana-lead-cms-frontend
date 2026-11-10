@@ -64,7 +64,7 @@ export class DynamicPagesComponent implements OnInit {
 
     forkJoin({
       citiesRes: this.cityService.getCities().pipe(catchError(() => of({ success: false, data: [] as City[] }))),
-      branchesRes: this.branchService.getBranches({ limit: 1000 }).pipe(catchError(() => of({ success: false, data: [] as Branch[] }))),
+      branchesRes: this.branchService.getBranches({ per_page: 100, limit: 100 }).pipe(catchError(() => of({ success: false, data: [] as Branch[] }))),
       classesRes: this.classService.getClasses().pipe(catchError(() => of({ success: false, data: [] as ClassMaster[] }))),
       pagesRes: this.dynamicPageService.getDynamicPages(params),
     }).subscribe({

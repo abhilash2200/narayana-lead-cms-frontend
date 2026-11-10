@@ -19,6 +19,9 @@ export interface LeadItem {
   phone: string;
   otp_validation: string;
   duplicate_count?: number;
+  phone_duplicate_count?: number;
+  phone_occurrence_no?: number;
+  is_phone_duplicate?: boolean;
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
@@ -85,6 +88,7 @@ export interface LeadQueryParams {
   exclude_search?: string;
   name?: string;
   phone?: string;
+  phone_mode?: 'all' | 'unique' | 'duplicates_only';
   date_from?: string;
   date_to?: string;
   redirect_from?: string;

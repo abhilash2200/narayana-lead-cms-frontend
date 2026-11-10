@@ -11,32 +11,66 @@ export function buildWhyUsSection(
 ): PageBuilderSection {
   const isEnabled = Boolean(sections.find((s) => s.key === 'why-us')?.active ?? true);
   const whyUsBoxes = Array.isArray(whyUs.boxes) ? whyUs.boxes : [];
-  const fullHeading = [whyUs.sectionHeading, whyUs.highlightWord, whyUs.headingSuffix]
-    .filter((part): part is string => Boolean(part && String(part).trim().length > 0))
-    .join(' ')
-    .trim();
+
+  let heading = (whyUs.sectionHeading ?? '').trim();
+  let highlightWord = (whyUs.highlightWord ?? '').trim();
+  let headingSuffix = (whyUs.headingSuffix ?? '').trim();
+
+  // If heading contains Narayana and highlightWord is missing, break it up
+  if (!highlightWord && heading.includes('Narayana')) {
+    const parts = heading.split('Narayana');
+    heading = parts[0]?.trim() || 'Why Choose';
+    highlightWord = 'Narayana';
+    if (!headingSuffix) {
+      headingSuffix = parts[1]?.trim() || 'Schools';
+    }
+  }
+
+  const finalHeading = heading || 'Why Choose';
+  const finalHighlightWord = highlightWord || 'Narayana';
+  const finalHeadingSuffix = headingSuffix || 'Schools';
+  const finalSubHeading =
+    (whyUs.sectionSubHeading ?? '').trim() ||
+    'A system built for consistency, discipline, and results.';
+
+  const items = whyUsBoxes
+    .filter((b) => (b.heading || b.paragraph || '').trim().length > 0)
+    .map((b, idx) => {
+      const parsedMediaId = Number(b.mediaId);
+      const iconMediaId = Number.isInteger(parsedMediaId) && parsedMediaId > 0 ? parsedMediaId : 1;
+      const title = (b.heading ?? '').trim() || `Advantage ${idx + 1}`;
+      return {
+        title,
+        description: (b.paragraph ?? '').trim() || 'A system built for consistency, discipline, and results.',
+        icon_media_id: iconMediaId,
+        icon_alt: title,
+        sort_order: idx + 1,
+      };
+    });
 
   return {
     section_type: 'WHY_US',
     is_enabled: isEnabled,
     sort_order: 3,
     content: {
-      heading: fullHeading || (whyUs.sectionHeading ?? '').trim() || 'Why Choose Narayana',
-      subheading: (whyUs.sectionSubHeading ?? '').trim() || 'A system built for consistency, discipline, and results.',
-      items: whyUsBoxes
-        .filter((b) => (b.heading || b.paragraph || '').trim().length > 0)
-        .map((b, idx) => {
-          const parsedMediaId = Number(b.mediaId);
-          const iconMediaId = Number.isInteger(parsedMediaId) && parsedMediaId > 0 ? parsedMediaId : 1;
-          const title = (b.heading ?? '').trim() || `Advantage ${idx + 1}`;
-          return {
-            title,
-            description: (b.paragraph ?? '').trim() || 'A system built for consistency, discipline, and results.',
-            icon_media_id: iconMediaId,
-            icon_alt: title,
-            sort_order: idx + 1,
-          };
-        }),
+      heading: finalHeading,
+      highlight_word: finalHighlightWord,
+      heading_suffix: finalHeadingSuffix,
+      subheading: finalSubHeading,
+      desktop_active: Boolean(whyUs.desktopActive ?? true),
+      mobile_active: Boolean(whyUs.mobileActive ?? true),
+      items:
+        items.length > 0
+          ? items
+          : [
+              {
+                title: 'Academic Excellence',
+                description: 'A system built for consistency, discipline, and results.',
+                icon_media_id: 1,
+                icon_alt: 'Academic Excellence',
+                sort_order: 1,
+              },
+            ],
     },
   };
 }

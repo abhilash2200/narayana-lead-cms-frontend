@@ -228,7 +228,7 @@ export class ClonePageModalComponent implements OnChanges {
       }
 
       this.isLoadingBranches = true;
-      this.branchService.getBranches({ city_id: this.targetCityId, limit: 500 }).subscribe({
+      this.branchService.getBranches({ city_id: this.targetCityId, per_page: 100, limit: 100 }).subscribe({
         next: (res) => {
           this.isLoadingBranches = false;
           if (res.success && res.data) {
@@ -238,6 +238,7 @@ export class ClonePageModalComponent implements OnChanges {
               name: b.name,
               slug: b.slug,
             }));
+            fetched.sort((a, b) => a.name.localeCompare(b.name));
             this.cityBranches = fetched;
 
             // Merge into this.branches cache so other lookups have them
@@ -321,17 +322,8 @@ export class ClonePageModalComponent implements OnChanges {
       this.seoTitle = autoSeoTitle;
     }
 
-    // Replace SEO description if user hasn't typed custom text,
-    // or if the current description contains stale source text (like "kolkata" when target is "Bardhaman")
-    const currentDescLower = (this.seoDescription || '').toLowerCase();
-    const isSourceCityStale =
-      city && currentDescLower.includes('kolkata') && city.name.toLowerCase() !== 'kolkata';
-
-    if (!this.userEditedSeoDescription || !this.seoDescription || isSourceCityStale) {
+    if (!this.userEditedSeoDescription || !this.seoDescription) {
       this.seoDescription = autoSeoDesc;
-      if (isSourceCityStale) {
-        this.userEditedSeoDescription = false;
-      }
     }
   }
 

@@ -69,23 +69,12 @@
               <!-- SEARCH INPUT -->
               <div class="relative min-w-[190px] flex-1 sm:max-w-[210px]">
                 <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchInput($event)"
-                  placeholder="Search leads (name, phone)..."
+                  placeholder="Search leads (name, phone, email)..."
                   class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-8 pr-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900" />
                 <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-
-              <!-- EXCLUDE SEARCH INPUT -->
-              <div class="relative min-w-[170px] flex-1 sm:max-w-[190px]">
-                <input type="text" [(ngModel)]="excludeSearchTerm" (ngModelChange)="onExcludeSearchInput($event)"
-                  placeholder="Exclude (name, phone)..."
-                  title="Exclude leads containing this name or phone"
-                  class="h-8.5 w-full rounded-lg border border-slate-200 bg-slate-50/50 pl-8 pr-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:bg-white focus:ring-1 focus:ring-red-400" />
-                <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
               </div>
 
@@ -97,65 +86,66 @@
                 (startDateChange)="dateFrom = $event"
                 (endDateChange)="dateTo = $event" />
 
-              <!-- OTP STATUS FILTER -->
+              <!-- EXCLUDE "TEST" TOGGLE BUTTON -->
+              <button type="button" (click)="toggleExcludeTest()"
+                [class.bg-rose-50]="excludeTest"
+                [class.border-rose-300]="excludeTest"
+                [class.text-rose-700]="excludeTest"
+                [class.bg-white]="!excludeTest"
+                [class.border-slate-200]="!excludeTest"
+                [class.text-slate-700]="!excludeTest"
+                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold shadow-2xs transition hover:bg-slate-50 cursor-pointer"
+                title="Toggle to include or exclude test/dummy leads">
+                <svg class="h-3.5 w-3.5 text-slate-400" [class.text-rose-600]="excludeTest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <span>Exclude "Test"</span>
+                @if (testLeadsCount > 0 || excludeTest) {
+                  <span class="rounded-full px-1.5 py-0.2 text-[10px] font-bold"
+                    [class.bg-rose-100]="excludeTest"
+                    [class.text-rose-800]="excludeTest"
+                    [class.bg-slate-100]="!excludeTest"
+                    [class.text-slate-600]="!excludeTest">
+                    {{ testLeadsCount }}
+                  </span>
+                }
+              </button>
+
+              <!-- PHONE MODE DROPDOWN SELECTOR -->
               <div class="relative inline-flex items-center">
-                <select [(ngModel)]="backendFilters.otp_validation" (ngModelChange)="onBackendFilterChange()"
-                  class="h-8.5 appearance-none rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
-                  <option value="">OTP: All</option>
-                  <option value="VALID">OTP: Valid</option>
-                  <option value="INVALID">OTP: Invalid</option>
+                <select [ngModel]="phoneMode" (ngModelChange)="onPhoneModeChange($event)"
+                  class="h-8.5 appearance-none rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20 cursor-pointer">
+                  <option value="all">Phone: All</option>
+                  <option value="unique">Phone: Unique Only</option>
+                  <option value="duplicates_only">Phone: Duplicates Only</option>
                 </select>
                 <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
 
-              <!-- CITY FILTER -->
-              @if (cityOptions.length > 0) {
-              <div class="relative inline-flex items-center">
-                <select [(ngModel)]="backendFilters.city" (ngModelChange)="onBackendFilterChange()"
-                  class="h-8.5 max-w-[130px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
-                  <option value="">City: All</option>
-                  @for (c of cityOptions; track c) {
-                  <option [value]="c">{{ c }}</option>
-                  }
-                </select>
-                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              <!-- DUPLICATE LEADS COUNT PILL (e.g. 5 dups) -->
+              @if (duplicateLeadsCount > 0) {
+                <button type="button"
+                  (click)="onPhoneModeChange(phoneMode === 'duplicates_only' ? 'all' : 'duplicates_only')"
+                  [class.bg-amber-100]="phoneMode === 'duplicates_only'"
+                  [class.border-amber-300]="phoneMode === 'duplicates_only'"
+                  [class.text-amber-900]="phoneMode === 'duplicates_only'"
+                  [class.bg-amber-50]="phoneMode !== 'duplicates_only'"
+                  [class.border-amber-200]="phoneMode !== 'duplicates_only'"
+                  [class.text-amber-700]="phoneMode !== 'duplicates_only'"
+                  class="inline-flex h-8.5 items-center gap-1 rounded-full border px-2.5 text-xs font-bold transition hover:bg-amber-100 cursor-pointer"
+                  [title]="'Filter ' + duplicateLeadsCount + ' duplicate records'">
+                  <span>{{ duplicateLeadsCount }} dups</span>
+                </button>
               }
 
-              <!-- BRANCH FILTER -->
-              @if (branchOptions.length > 0) {
-              <div class="relative inline-flex items-center">
-                <select [(ngModel)]="backendFilters.branch" (ngModelChange)="onBackendFilterChange()"
-                  class="h-8.5 max-w-[140px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
-                  <option value="">Branch: All</option>
-                  @for (b of branchOptions; track b) {
-                  <option [value]="b">{{ b }}</option>
-                  }
-                </select>
-                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-              }
-
-              <!-- CLASS FILTER -->
-              @if (classOptions.length > 0) {
-              <div class="relative inline-flex items-center">
-                <select [(ngModel)]="backendFilters.class" (ngModelChange)="onBackendFilterChange()"
-                  class="h-8.5 max-w-[130px] appearance-none truncate rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 text-xs font-semibold text-slate-700 shadow-2xs outline-none transition hover:bg-slate-50 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20">
-                  <option value="">Class: All</option>
-                  @for (cls of classOptions; track cls) {
-                  <option [value]="cls">{{ cls }}</option>
-                  }
-                </select>
-                <svg class="pointer-events-none absolute right-2 h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              <!-- EXACT PHONE INSPECT PILL (Active when user clicks duplicate badge) -->
+              @if (exactPhone) {
+                <div class="inline-flex h-8.5 items-center gap-1.5 rounded-full bg-amber-50 border border-amber-300 px-2.5 text-xs font-semibold text-amber-900 shadow-2xs">
+                  <span>Inspecting: <span class="font-bold">{{ exactPhone }}</span></span>
+                  <button type="button" (click)="clearExactPhoneFilter()" class="ml-1 text-amber-700 hover:text-amber-950 font-bold text-xs" title="Clear phone filter">&times;</button>
+                </div>
               }
 
               <!-- MORE FILTERS TOGGLE BUTTON -->
@@ -166,7 +156,7 @@
                 [class.bg-white]="!showMoreFilters && activeAdvancedFilterCount === 0"
                 [class.border-slate-200]="!showMoreFilters && activeAdvancedFilterCount === 0"
                 [class.text-slate-600]="!showMoreFilters && activeAdvancedFilterCount === 0"
-                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold shadow-2xs transition hover:bg-slate-50">
+                class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold shadow-2xs transition hover:bg-slate-50 cursor-pointer">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
@@ -181,7 +171,7 @@
               <!-- RESET BUTTON -->
               @if (hasActiveFilters) {
               <button type="button" (click)="resetFilters()"
-                class="inline-flex h-8.5 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-800">
+                class="inline-flex h-8.5 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 cursor-pointer">
                 <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -384,36 +374,43 @@
             }
           </div>
 
-          <!-- EXACT DUPLICATE SEARCH (NAME / PHONE) -->
+          <!-- EXACT DUPLICATE SEARCH (NAME / PHONE) & CUSTOM EXCLUDE -->
           <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-200/60">
             <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <svg class="h-3.5 w-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"/>
                 <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"/>
               </svg>
-              <span>Exact Duplicate Match:</span>
+              <span>Exact Duplicate:</span>
             </div>
 
-            <div class="relative min-w-[180px] max-w-[210px]">
+            <div class="relative min-w-[170px] max-w-[200px]">
               <input type="text" [(ngModel)]="exactName" (ngModelChange)="onExactDuplicateFilterChange()"
-                placeholder="Exact Name (case-sensitive)..."
+                placeholder="Exact Name..."
                 title="Exact stored Name match"
                 class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20" />
             </div>
 
-            <div class="relative min-w-[160px] max-w-[190px]">
+            <div class="relative min-w-[150px] max-w-[180px]">
               <input type="text" [(ngModel)]="exactPhone" (ngModelChange)="onExactDuplicateFilterChange()"
-                placeholder="Exact Phone (e.g. 9876543210)..."
+                placeholder="Exact Phone..."
                 title="Exact stored Phone match"
                 class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#8c7ae6] focus:ring-1 focus:ring-[#8c7ae6]/20" />
             </div>
 
-            <span class="text-[11px] text-slate-400 italic">Returns newest row with duplicate count badge</span>
+            <div class="h-4 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+            <div class="relative min-w-[170px] max-w-[200px]">
+              <input type="text" [(ngModel)]="excludeSearchTerm" (ngModelChange)="onExcludeSearchInput($event)"
+                placeholder="Exclude (name, phone)..."
+                title="Partial exclude search across name and phone"
+                class="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-400/20" />
+            </div>
 
             @if (activeAdvancedFilterCount > 0) {
             <div class="ml-auto">
               <button type="button" (click)="resetAdvancedFilters(); onBackendFilterChange()"
-                class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer">
                 Clear advanced filters
               </button>
             </div>
@@ -521,6 +518,11 @@
                 <td class="whitespace-nowrap px-2.5 py-1.5 text-[13px] font-semibold text-slate-800">
                   <div class="flex items-center gap-1.5">
                     <span>{{ lead.name || '—' }}</span>
+                    @if (isLeadTest(lead)) {
+                      <span class="inline-flex items-center rounded bg-rose-50 border border-rose-200 px-1.5 py-0.2 text-[10px] font-bold text-rose-600">
+                        Test
+                      </span>
+                    }
                     @if (lead.duplicate_count && lead.duplicate_count > 1) {
                       <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-bold text-amber-700"
                         [title]="lead.duplicate_count + ' duplicate records found for this exact match'">
@@ -536,7 +538,17 @@
                 }
                 @case ('phone') {
                 <td class="whitespace-nowrap px-2.5 py-1.5 text-[13px] font-medium text-slate-700">
-                  <span>{{ lead.phone || '—' }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ lead.phone || '—' }}</span>
+                    @if (lead.phone && (lead.is_phone_duplicate || (lead.phone_duplicate_count && lead.phone_duplicate_count > 1) || (lead.duplicate_count && lead.duplicate_count > 1))) {
+                      <button type="button"
+                        (click)="inspectDuplicatePhone(lead.phone, $event)"
+                        class="inline-flex items-center rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 transition cursor-pointer"
+                        [title]="'Click to inspect duplicate submissions for ' + lead.phone">
+                        {{ lead.phone_duplicate_count || lead.duplicate_count }}x
+                      </button>
+                    }
+                  </div>
                 </td>
                 }
                 @case ('parent_email') {
@@ -682,18 +694,35 @@
             </div>
           </div>
 
-          <!-- DUPLICATE BANNER (IF EXACT DUPLICATES PRESENT) -->
-          @if (selectedLeadForDetail.duplicate_count && selectedLeadForDetail.duplicate_count > 1) {
-          <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="h-8 w-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
-                {{ selectedLeadForDetail.duplicate_count }}x
-              </div>
-              <div>
-                <span class="text-xs font-bold text-amber-900 block">Exact Duplicate Records Found</span>
-                <span class="text-[11px] text-amber-700">This record represents {{ selectedLeadForDetail.duplicate_count }} duplicate submissions matching exact name/phone.</span>
+          <!-- DUPLICATE BANNER (IF DUPLICATES PRESENT) -->
+          @if ((selectedLeadForDetail.phone_duplicate_count && selectedLeadForDetail.phone_duplicate_count > 1) || selectedLeadForDetail.is_phone_duplicate || (selectedLeadForDetail.duplicate_count && selectedLeadForDetail.duplicate_count > 1)) {
+          <div class="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="h-8 w-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
+                  {{ selectedLeadForDetail.phone_duplicate_count || selectedLeadForDetail.duplicate_count }}x
+                </div>
+                <div>
+                  <span class="text-xs font-bold text-amber-900 block">Duplicate Submissions Detected</span>
+                  <span class="text-[11px] text-amber-700 block">
+                    {{ selectedLeadForDetail.phone_duplicate_count || selectedLeadForDetail.duplicate_count }} submissions found for phone {{ selectedLeadForDetail.phone || 'this match' }}.
+                    @if (selectedLeadForDetail.phone_occurrence_no) {
+                      (Record #{{ selectedLeadForDetail.phone_occurrence_no }})
+                    }
+                  </span>
+                </div>
               </div>
             </div>
+            @if (selectedLeadForDetail.phone) {
+              <button type="button"
+                (click)="inspectDuplicatePhone(selectedLeadForDetail.phone); closeLeadDetail()"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 text-xs font-semibold shadow-xs transition">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Inspect all {{ selectedLeadForDetail.phone_duplicate_count || selectedLeadForDetail.duplicate_count }} submissions for {{ selectedLeadForDetail.phone }}
+              </button>
+            }
           </div>
           }
 

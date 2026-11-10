@@ -31,6 +31,7 @@ import {
   LeadService,
 } from '../../services/lead.service';
 import { ColumnConfig } from './models/lead-analysis.model';
+import { isTestLead, isOtpVerified, normalizePhone } from './utils/lead-filters.util';
 
 export type { ColumnConfig };
 
@@ -105,8 +106,10 @@ export class LeadsComponent implements OnInit, OnDestroy {
   // Query & Filter state
   searchTerm = '';
   excludeSearchTerm = '';
+  excludeTest = false;
   exactName = '';
   exactPhone = '';
+  phoneMode: 'all' | 'unique' | 'duplicates_only' = 'all';
   dateFrom = '';
   dateTo = '';
   perPage = 25;
@@ -151,16 +154,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
     'utm_source',
   ]);
 
-  // Primary filters shown directly in the top toolbar
-  readonly primaryFilterKeys = new Set([
-    'otp_validation',
-    'city',
-    'cities',
-    'branch',
-    'branches',
-    'class',
-    'classes',
-  ]);
+  // Primary filters shown directly in the top toolbar (remaining filters reside in More Filters)
+  readonly primaryFilterKeys = new Set<string>();
 
   // Param mapping between backend filter-options keys and API query params
   readonly filterKeyToParamMap: Record<string, string> = {
@@ -669,8 +664,10 @@ export class LeadsComponent implements OnInit, OnDestroy {
     this.currentPage = 1;
     this.searchTerm = '';
     this.excludeSearchTerm = '';
+    this.excludeTest = false;
     this.exactName = '';
     this.exactPhone = '';
+    this.phoneMode = 'all';
     this.dateFrom = '';
     this.dateTo = '';
     this.resetBackendFilters();
@@ -739,6 +736,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       module: this.selectedModuleKey,
       page: this.currentPage,
       per_page: this.perPage,
+      phone_mode: this.phoneMode,
     };
     if (this.searchTerm.trim()) params['search'] = this.searchTerm.trim();
     if (this.excludeSearchTerm.trim()) params['exclude_search'] = this.excludeSearchTerm.trim();
@@ -844,8 +842,10 @@ export class LeadsComponent implements OnInit, OnDestroy {
   resetFilters(): void {
     this.searchTerm = '';
     this.excludeSearchTerm = '';
+    this.excludeTest = false;
     this.exactName = '';
     this.exactPhone = '';
+    this.phoneMode = 'all';
     this.dateFrom = '';
     this.dateTo = '';
     this.sortKey = 'id';
@@ -860,14 +860,70 @@ export class LeadsComponent implements OnInit, OnDestroy {
     return Boolean(
       this.searchTerm.trim() ||
       this.excludeSearchTerm.trim() ||
+      this.excludeTest ||
       this.exactName.trim() ||
       this.exactPhone.trim() ||
+      this.phoneMode !== 'all' ||
       this.dateFrom ||
       this.dateTo ||
       this.activeBackendFilterCount > 0 ||
       this.sortKey !== 'id' ||
       this.sortOrder !== 'desc'
     );
+  }
+
+  toggleExcludeTest(): void {
+    this.excludeTest = !this.excludeTest;
+    this.excludeSearchTerm = this.excludeTest ? 'test' : '';
+    this.currentPage = 1;
+    this.clearPageCache();
+    this.fetchLeads();
+  }
+
+  isLeadTest(lead: LeadItem): boolean {
+    return isTestLead(lead);
+  }
+
+  get testLeadsCount(): number {
+    return this.leads.filter((l) => isTestLead(l)).length;
+  }
+
+  get duplicateLeadsCount(): number {
+    return this.leads.filter(
+      (l) =>
+        Boolean(l.is_phone_duplicate) ||
+        Boolean(l.phone_duplicate_count && l.phone_duplicate_count > 1) ||
+        Boolean(l.duplicate_count && l.duplicate_count > 1)
+    ).length;
+  }
+
+  onPhoneModeChange(mode?: 'all' | 'unique' | 'duplicates_only'): void {
+    if (mode) {
+      this.phoneMode = mode;
+    }
+    this.currentPage = 1;
+    this.clearPageCache();
+    this.fetchLeads();
+  }
+
+  inspectDuplicatePhone(phone: string, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!phone) return;
+    this.exactPhone = phone.trim();
+    this.phoneMode = 'all';
+    this.currentPage = 1;
+    this.clearPageCache();
+    this.fetchLeads();
+    this.toastService.info(`Inspecting all records for phone: ${this.exactPhone}`);
+  }
+
+  clearExactPhoneFilter(): void {
+    this.exactPhone = '';
+    this.currentPage = 1;
+    this.clearPageCache();
+    this.fetchLeads();
   }
 
   get activeBackendFilterCount(): number {
@@ -926,6 +982,28 @@ export class LeadsComponent implements OnInit, OnDestroy {
   get advancedFilterGroups(): DynamicFilterOptionGroup[] {
     if (!this.filterOptions) return [];
 
+    const preferredOrder = [
+      'otp_validation',
+      'cities',
+      'city',
+      'branches',
+      'branch',
+      'classes',
+      'class',
+      'boards',
+      'board',
+      'class_category',
+      'reservation_types',
+      'reservation_type',
+      'redirect_from',
+      'utm_sources',
+      'utm_source',
+      'utm_mediums',
+      'utm_medium',
+      'utm_campaigns',
+      'utm_campaign',
+    ];
+
     const groups: DynamicFilterOptionGroup[] = [];
     for (const [key, rawOptions] of Object.entries(this.filterOptions)) {
       if (this.primaryFilterKeys.has(key)) continue;
@@ -943,6 +1021,15 @@ export class LeadsComponent implements OnInit, OnDestroy {
         });
       }
     }
+
+    groups.sort((a, b) => {
+      const idxA = preferredOrder.indexOf(a.key);
+      const idxB = preferredOrder.indexOf(b.key);
+      const posA = idxA === -1 ? 999 : idxA;
+      const posB = idxB === -1 ? 999 : idxB;
+      return posA - posB;
+    });
+
     return groups;
   }
 

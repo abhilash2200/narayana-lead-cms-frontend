@@ -281,7 +281,7 @@ export class AddDynamicPageComponent implements OnInit {
     this.selectedClassId = null;
 
     if (this.selectedCityId !== null) {
-      this.branchService.getBranches({ city_id: this.selectedCityId, limit: 500 }).subscribe({
+      this.branchService.getBranches({ city_id: this.selectedCityId, per_page: 100, limit: 100 }).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             const fetched: BranchOption[] = res.data.map((b) => ({

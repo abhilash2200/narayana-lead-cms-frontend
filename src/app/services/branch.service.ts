@@ -30,6 +30,7 @@ export interface BranchQueryParams {
   city_id?: number | string;
   page?: number;
   limit?: number;
+  per_page?: number;
   search?: string;
   status?: string;
 }
