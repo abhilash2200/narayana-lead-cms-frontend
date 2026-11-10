@@ -1,0 +1,19 @@
+<div class="grid gap-4 sm:grid-cols-2">
+  <div>
+    <label class="mb-2 block text-xs font-semibold text-slate-700">
+      {{ textLabel }}
+    </label>
+    <input type="text" [ngModel]="buttonText" (ngModelChange)="onTextChange($event)"
+      [placeholder]="textPlaceholder"
+      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+  </div>
+
+  <div>
+    <label class="mb-2 block text-xs font-semibold text-slate-700">
+      {{ urlLabel }}
+    </label>
+    <input type="text" [ngModel]="buttonUrl" (ngModelChange)="onUrlChange($event)"
+      [placeholder]="urlPlaceholder"
+      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+  </div>
+</div>

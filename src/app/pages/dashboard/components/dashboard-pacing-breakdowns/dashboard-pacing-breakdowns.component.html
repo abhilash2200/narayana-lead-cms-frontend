@@ -1,0 +1,278 @@
+<div class="space-y-4 min-w-0">
+  
+  <!-- DAILY PACING TREND CHART -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">
+          Daily Lead Inflow & Pacing Trend
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Day-by-day lead volume across the active date range
+        </p>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-600">
+        <span class="flex items-center gap-1">
+          <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Verified
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span> Pending
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="h-2.5 w-2.5 rounded-full bg-indigo-400"></span> Duplicate
+        </span>
+      </div>
+    </div>
+
+    <!-- Bar Chart Display -->
+    @if (calculationResult?.dailyTrend && calculationResult!.dailyTrend.length > 0) {
+    <div class="relative pt-2 pb-2">
+      <div class="flex items-end justify-between gap-1.5 h-48 border-b border-slate-100 px-1 pt-12 overflow-x-auto">
+        @for (d of calculationResult!.dailyTrend; track d.date) {
+        <div class="flex-1 min-w-[28px] max-w-[48px] flex flex-col items-center gap-1 group relative">
+          
+          <!-- Tooltip -->
+          <div class="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+            <div class="rounded-md bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+              {{ d.date }}: {{ d.total }} leads ({{ d.verified }} verified)
+            </div>
+            <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-1"></div>
+          </div>
+
+          <!-- Stacked Bar -->
+          <div class="w-full rounded-t-md overflow-hidden bg-slate-100 flex flex-col justify-end transition-all duration-300 hover:brightness-105"
+            [style.height.%]="d.heightPercent">
+            <div class="bg-indigo-400 w-full" [style.height.%]="d.total > 0 ? (d.duplicate / d.total) * 100 : 0"></div>
+            <div class="bg-amber-400 w-full" [style.height.%]="d.total > 0 ? (d.pending / d.total) * 100 : 0"></div>
+            <div class="bg-emerald-500 w-full flex-1 min-h-[4px]"></div>
+          </div>
+
+          <!-- Date Label -->
+          <span class="text-[10px] font-semibold text-slate-400 truncate w-full text-center">
+            {{ d.dayLabel }}
+          </span>
+        </div>
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="py-12 text-center text-xs text-slate-400">
+      No daily inflow records in the selected range.
+    </div>
+    }
+  </div>
+
+  <!-- COURSE-WISE LEAD ANALYSIS TABLE (Requirement #3) -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="flex items-center justify-between mb-3.5">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">
+          Course & Class Quality Matrix
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Breakdown by program with total volume, daily run-rate, and verification rates
+        </p>
+      </div>
+      <span class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-100">
+        {{ calculationResult?.courseBreakdown?.length ?? 0 }} Programs Active
+      </span>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <th class="py-2.5 pl-2">Course / Class</th>
+            <th class="py-2.5 px-3 text-right">
+              {{ filterState.reportMode === 'total' ? 'Total Leads' : 'Avg / Day' }}
+            </th>
+            <th class="py-2.5 px-3 text-right">Verified Rate</th>
+            <th class="py-2.5 px-3 text-right">Duplicate Rate</th>
+            <th class="py-2.5 pr-2 text-right">Inflow Share</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (c of calculationResult?.courseBreakdown || []; track c.courseName) {
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-2.5 pl-2 font-bold text-slate-800">
+              {{ c.courseName }}
+            </td>
+            <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">
+              {{ filterState.reportMode === 'total' ? formatNumber(c.totalLeads) : c.avgLeadsPerDay }}
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold"
+                [class.bg-emerald-50]="c.verifiedRate >= 70"
+                [class.text-emerald-700]="c.verifiedRate >= 70"
+                [class.bg-amber-50]="c.verifiedRate < 70"
+                [class.text-amber-700]="c.verifiedRate < 70">
+                {{ c.verifiedRate }}%
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">
+              {{ c.duplicateRate }}%
+            </td>
+            <td class="py-2.5 pr-2 text-right font-bold text-slate-500">
+              {{ c.sharePercent }}%
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="py-8 text-center text-xs text-slate-400">
+              No course records match your current filters.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HOURLY DAYPARTING & PEAK INFLOW HEATMAP -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-slate-900">
+            Hourly Inflow & Dayparting Heatmap
+          </h3>
+          <span class="rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+            Ad Scheduling Intelligence
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Submission concentration across 24 hours (helps optimize Google & Meta ad budget dayparting)
+        </p>
+      </div>
+      <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
+        <span class="flex items-center gap-1">
+          <span class="h-2 w-2 rounded-full bg-indigo-600"></span> Volume
+        </span>
+        <span class="flex items-center gap-1">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Verified Rate
+        </span>
+      </div>
+    </div>
+
+    <!-- 24-Hour Bar Visualizer -->
+    <div class="overflow-x-auto pb-1">
+      <div class="flex items-end justify-between gap-1.5 h-36 min-w-[580px] border-b border-slate-100 px-1 pt-6">
+        @for (h of calculationResult?.hourlyDistribution || []; track h.hour) {
+        <div class="flex-1 flex flex-col items-center gap-1 group relative">
+          
+          <!-- Hover Tooltip -->
+          <div class="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+            <div class="rounded-md bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+              {{ h.label }}: {{ h.count }} leads • {{ h.verifiedRate }}% verified
+            </div>
+            <div class="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-1"></div>
+          </div>
+
+          <!-- Bar -->
+          <div class="w-full rounded-t-sm overflow-hidden transition-all duration-300 group-hover:brightness-110"
+            [class.bg-indigo-600]="h.count > 5"
+            [class.bg-indigo-300]="h.count > 0 && h.count <= 5"
+            [class.bg-slate-100]="h.count === 0"
+            [style.height.%]="h.heightPercent">
+          </div>
+
+          <!-- Hour Label -->
+          <span class="text-[9px] font-semibold text-slate-400">
+            {{ h.hour % 3 === 0 ? h.label : '' }}
+          </span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Peak Insights Footer -->
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] text-slate-500 border-t border-slate-50">
+      <span class="flex items-center gap-1.5">
+        <span class="h-2 w-2 rounded-full bg-purple-500"></span>
+        <strong>Prime Inflow Windows:</strong> Morning (10:00 - 12:00) & Evening (18:00 - 21:00)
+      </span>
+      <span class="text-slate-400">Higher bids during prime windows increase verified prospect capture.</span>
+    </div>
+  </div>
+
+  <!-- AD CAMPAIGN ATTRIBUTION & QUALITY MATRIX -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="flex items-center justify-between mb-3.5">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">
+          Ad Campaign & Attribution Matrix
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Granular performance breakdown by active UTM campaign and media channel
+        </p>
+      </div>
+      <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
+        {{ calculationResult?.campaignBreakdown?.length ?? 0 }} Campaigns
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <th class="py-2.5 pl-2">Campaign Name</th>
+            <th class="py-2.5 px-3">Ad Channel</th>
+            <th class="py-2.5 px-3 text-right">Leads</th>
+            <th class="py-2.5 px-3 text-right">Verified Rate</th>
+            <th class="py-2.5 px-3 text-right">Duplicate Rate</th>
+            <th class="py-2.5 pr-2 text-right">Share</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (cmp of calculationResult?.campaignBreakdown || []; track cmp.campaign) {
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-2.5 pl-2 font-bold text-slate-800">
+              {{ cmp.campaign }}
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold"
+                [class.bg-blue-50]="cmp.source.includes('google')"
+                [class.text-blue-700]="cmp.source.includes('google')"
+                [class.bg-pink-50]="cmp.source.includes('meta') || cmp.source.includes('instagram')"
+                [class.text-pink-700]="cmp.source.includes('meta') || cmp.source.includes('instagram')"
+                [class.bg-red-50]="cmp.source.includes('youtube')"
+                [class.text-red-700]="cmp.source.includes('youtube')"
+                [class.bg-slate-100]="!cmp.source.includes('google') && !cmp.source.includes('meta') && !cmp.source.includes('youtube')">
+                {{ cmp.source }}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right font-extrabold text-slate-900">
+              {{ formatNumber(cmp.totalLeads) }}
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold"
+                [class.bg-emerald-50]="cmp.verifiedRate >= 70"
+                [class.text-emerald-700]="cmp.verifiedRate >= 70"
+                [class.bg-amber-50]="cmp.verifiedRate < 70"
+                [class.text-amber-700]="cmp.verifiedRate < 70">
+                {{ cmp.verifiedRate }}%
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">
+              {{ cmp.duplicateRate }}%
+            </td>
+            <td class="py-2.5 pr-2 text-right font-bold text-slate-500">
+              {{ cmp.sharePercent }}%
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="py-8 text-center text-xs text-slate-400">
+              No campaign attribution records available.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

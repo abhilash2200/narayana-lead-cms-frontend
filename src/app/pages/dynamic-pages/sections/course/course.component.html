@@ -210,332 +210,52 @@
             </div>
 
             <!-- Sub Heading 1 -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 class="text-sm font-semibold text-slate-900">
-                    Sub Heading 1
-                  </h4>
-
-                  <p class="mt-1 text-xs text-slate-500">
-                    Add heading, icon and list points.
-                  </p>
-                </div>
-
-                <button type="button" (click)="
-                              addListItem(
-                                courseItem.id,
-                                1
-                              )
-                            "
-                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
-                  + Add Point
-                </button>
-              </div>
-
-              <div class="mt-4">
-
-                <div class="grid gap-3 sm:grid-cols-4">
-                  <div class="sm:col-span-3">
-                    <input type="text" [(ngModel)]="courseItem.subHeading1" (ngModelChange)="emitChange()"
-                      placeholder="Enter sub heading 1 (e.g. Holistic Development:)"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                  </div>
-                  <div>
-                    <select [(ngModel)]="courseItem.icon1" (ngModelChange)="emitChange()"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
-                      <option value="TRENDING_UP">📈 Trending Chart</option>
-                      <option value="PUZZLE">🧩 Puzzle</option>
-                      <option value="FLASK">🧪 Science Flask</option>
-                      <option value="ID_BADGE">🪪 ID / Teacher</option>
-                      <option value="STAR">⭐ Star</option>
-                      <option value="BOOK">📖 Book</option>
-                      <option value="BRAIN">🧠 Brain / Concept</option>
-                      <option value="SHIELD">🛡️ Shield</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="mt-3 space-y-2">
-
-                  @for (
-                  point of courseItem.listItems1;
-                  track point.id
-                  ) {
-
-                  <div class="flex items-center gap-2">
-
-                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
-                      placeholder="Enter list point"
-                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-
-                    <button type="button" (click)="
-                                    removeListItem(
-                                      courseItem.id,
-                                      1,
-                                      point.id
-                                    )
-                                  "
-                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
-                      Remove
-                    </button>
-
-                  </div>
-
-                  }
-
-                </div>
-
-              </div>
-
-            </div>
+            <app-course-feature-group
+              [groupIndex]="1"
+              [label]="'Sub Heading 1'"
+              [placeholder]="'Enter sub heading 1 (e.g. Holistic Development:)'"
+              [(subHeading)]="courseItem.subHeading1"
+              [(icon)]="courseItem.icon1"
+              [listItems]="courseItem.listItems1"
+              (addPoint)="addListItem(courseItem.id, 1)"
+              (removePoint)="removeListItem(courseItem.id, 1, $event)"
+              (contentChange)="emitChange()" />
 
             <!-- Sub Heading 2 -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 class="text-sm font-semibold text-slate-900">
-                    Sub Heading 2
-                  </h4>
-
-                  <p class="mt-1 text-xs text-slate-500">
-                    Add heading and list points.
-                  </p>
-                </div>
-
-                <button type="button" (click)="
-                              addListItem(
-                                courseItem.id,
-                                2
-                              )
-                            "
-                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
-                  + Add Point
-                </button>
-              </div>
-
-              <div class="mt-4">
-
-                <div class="grid gap-3 sm:grid-cols-4">
-                  <div class="sm:col-span-3">
-                    <input type="text" [(ngModel)]="courseItem.subHeading2" (ngModelChange)="emitChange()"
-                      placeholder="Enter sub heading 2 (e.g. Concept-Based Learning:)"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                  </div>
-                  <div>
-                    <select [(ngModel)]="courseItem.icon2" (ngModelChange)="emitChange()"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
-                      <option value="PUZZLE">🧩 Puzzle</option>
-                      <option value="TRENDING_UP">📈 Trending Chart</option>
-                      <option value="FLASK">🧪 Science Flask</option>
-                      <option value="ID_BADGE">🪪 ID / Teacher</option>
-                      <option value="STAR">⭐ Star</option>
-                      <option value="BOOK">📖 Book</option>
-                      <option value="BRAIN">🧠 Brain / Concept</option>
-                      <option value="SHIELD">🛡️ Shield</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="mt-3 space-y-2">
-
-                  @for (
-                  point of courseItem.listItems2;
-                  track point.id
-                  ) {
-
-                  <div class="flex items-center gap-2">
-
-                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
-                      placeholder="Enter list point"
-                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-
-                    <button type="button" (click)="
-                                    removeListItem(
-                                      courseItem.id,
-                                      2,
-                                      point.id
-                                    )
-                                  "
-                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
-                      Remove
-                    </button>
-
-                  </div>
-
-                  }
-
-                </div>
-
-              </div>
-
-            </div>
+            <app-course-feature-group
+              [groupIndex]="2"
+              [label]="'Sub Heading 2'"
+              [placeholder]="'Enter sub heading 2 (e.g. Concept-Based Learning:)'"
+              [(subHeading)]="courseItem.subHeading2"
+              [(icon)]="courseItem.icon2"
+              [listItems]="courseItem.listItems2"
+              (addPoint)="addListItem(courseItem.id, 2)"
+              (removePoint)="removeListItem(courseItem.id, 2, $event)"
+              (contentChange)="emitChange()" />
 
             <!-- Sub Heading 3 -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 class="text-sm font-semibold text-slate-900">
-                    Sub Heading 3
-                  </h4>
-
-                  <p class="mt-1 text-xs text-slate-500">
-                    Add heading and list points.
-                  </p>
-                </div>
-
-                <button type="button" (click)="
-                              addListItem(
-                                courseItem.id,
-                                3
-                              )
-                            "
-                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
-                  + Add Point
-                </button>
-              </div>
-
-              <div class="mt-4">
-
-                <div class="grid gap-3 sm:grid-cols-4">
-                  <div class="sm:col-span-3">
-                    <input type="text" [(ngModel)]="courseItem.subHeading3" (ngModelChange)="emitChange()"
-                      placeholder="Enter sub heading 3 (e.g. Logical & Scientific Thinking:)"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                  </div>
-                  <div>
-                    <select [(ngModel)]="courseItem.icon3" (ngModelChange)="emitChange()"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
-                      <option value="FLASK">🧪 Science Flask</option>
-                      <option value="TRENDING_UP">📈 Trending Chart</option>
-                      <option value="PUZZLE">🧩 Puzzle</option>
-                      <option value="ID_BADGE">🪪 ID / Teacher</option>
-                      <option value="STAR">⭐ Star</option>
-                      <option value="BOOK">📖 Book</option>
-                      <option value="BRAIN">🧠 Brain / Concept</option>
-                      <option value="SHIELD">🛡️ Shield</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="mt-3 space-y-2">
-
-                  @for (
-                  point of courseItem.listItems3;
-                  track point.id
-                  ) {
-
-                  <div class="flex items-center gap-2">
-
-                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
-                      placeholder="Enter list point"
-                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-
-                    <button type="button" (click)="
-                                    removeListItem(
-                                      courseItem.id,
-                                      3,
-                                      point.id
-                                    )
-                                  "
-                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
-                      Remove
-                    </button>
-
-                  </div>
-
-                  }
-
-                </div>
-
-              </div>
-
-            </div>
+            <app-course-feature-group
+              [groupIndex]="3"
+              [label]="'Sub Heading 3'"
+              [placeholder]="'Enter sub heading 3 (e.g. Logical & Scientific Thinking:)'"
+              [(subHeading)]="courseItem.subHeading3"
+              [(icon)]="courseItem.icon3"
+              [listItems]="courseItem.listItems3"
+              (addPoint)="addListItem(courseItem.id, 3)"
+              (removePoint)="removeListItem(courseItem.id, 3, $event)"
+              (contentChange)="emitChange()" />
 
             <!-- Sub Heading 4 -->
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4 class="text-sm font-semibold text-slate-900">
-                    Sub Heading 4
-                  </h4>
-
-                  <p class="mt-1 text-xs text-slate-500">
-                    Add heading and list points.
-                  </p>
-                </div>
-
-                <button type="button" (click)="
-                              addListItem(
-                                courseItem.id,
-                                4
-                              )
-                            "
-                  class="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 border border-slate-200 transition hover:bg-slate-100">
-                  + Add Point
-                </button>
-              </div>
-
-              <div class="mt-4">
-
-                <div class="grid gap-3 sm:grid-cols-4">
-                  <div class="sm:col-span-3">
-                    <input type="text" [(ngModel)]="courseItem.subHeading4" (ngModelChange)="emitChange()"
-                      placeholder="Enter sub heading 4 (e.g. Structured & Supportive Learning:)"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                  </div>
-                  <div>
-                    <select [(ngModel)]="courseItem.icon4" (ngModelChange)="emitChange()"
-                      class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-400">
-                      <option value="ID_BADGE">🪪 ID / Teacher</option>
-                      <option value="TRENDING_UP">📈 Trending Chart</option>
-                      <option value="PUZZLE">🧩 Puzzle</option>
-                      <option value="FLASK">🧪 Science Flask</option>
-                      <option value="STAR">⭐ Star</option>
-                      <option value="BOOK">📖 Book</option>
-                      <option value="BRAIN">🧠 Brain / Concept</option>
-                      <option value="SHIELD">🛡️ Shield</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="mt-3 space-y-2">
-
-                  @for (
-                  point of courseItem.listItems4;
-                  track point.id
-                  ) {
-
-                  <div class="flex items-center gap-2">
-
-                    <input type="text" [(ngModel)]="point.text" (ngModelChange)="emitChange()"
-                      placeholder="Enter list point"
-                      class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-
-                    <button type="button" (click)="
-                                    removeListItem(
-                                      courseItem.id,
-                                      4,
-                                      point.id
-                                    )
-                                  "
-                      class="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">
-                      Remove
-                    </button>
-
-                  </div>
-
-                  }
-
-                </div>
-
-              </div>
-
-            </div>
+            <app-course-feature-group
+              [groupIndex]="4"
+              [label]="'Sub Heading 4'"
+              [placeholder]="'Enter sub heading 4 (e.g. Structured & Supportive Learning:)'"
+              [(subHeading)]="courseItem.subHeading4"
+              [(icon)]="courseItem.icon4"
+              [listItems]="courseItem.listItems4"
+              (addPoint)="addListItem(courseItem.id, 4)"
+              (removePoint)="removeListItem(courseItem.id, 4, $event)"
+              (contentChange)="emitChange()" />
 
             <!-- Mobile Version Configuration -->
             <div class="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50 p-5 space-y-5">
@@ -636,101 +356,35 @@
 
                 <!-- Button 1 -->
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
-
-                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
-                    Button 1
-                  </h5>
-
-                  <div class="grid gap-5 md:grid-cols-2">
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button Text
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonText1" (ngModelChange)="emitChange()"
-                        placeholder="Apply Now"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button URL
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonUrl1" (ngModelChange)="emitChange()"
-                        placeholder="https://example.com/apply"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                  </div>
-
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">Button 1</h5>
+                  <app-course-cta-row
+                    [textPlaceholder]="'Apply Now'"
+                    [urlPlaceholder]="'https://example.com/apply'"
+                    [(buttonText)]="courseItem.buttonText1"
+                    [(buttonUrl)]="courseItem.buttonUrl1"
+                    (contentChange)="emitChange()" />
                 </div>
 
                 <!-- Button 2 -->
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
-
-                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
-                    Button 2
-                  </h5>
-
-                  <div class="grid gap-5 md:grid-cols-2">
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button Text
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonText2" (ngModelChange)="emitChange()"
-                        placeholder="View Details"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button URL
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonUrl2" (ngModelChange)="emitChange()"
-                        placeholder="https://example.com/details"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                  </div>
-
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">Button 2</h5>
+                  <app-course-cta-row
+                    [textPlaceholder]="'View Details'"
+                    [urlPlaceholder]="'https://example.com/details'"
+                    [(buttonText)]="courseItem.buttonText2"
+                    [(buttonUrl)]="courseItem.buttonUrl2"
+                    (contentChange)="emitChange()" />
                 </div>
 
                 <!-- Button 3 -->
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
-
-                  <h5 class="mb-4 text-sm font-semibold text-slate-700">
-                    Button 3
-                  </h5>
-
-                  <div class="grid gap-5 md:grid-cols-2">
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button Text
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonText3" (ngModelChange)="emitChange()"
-                        placeholder="Download Brochure"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                    <div>
-                      <label class="mb-2 block text-sm font-semibold text-slate-700">
-                        Button URL
-                      </label>
-
-                      <input type="text" [(ngModel)]="courseItem.buttonUrl3" (ngModelChange)="emitChange()"
-                        placeholder="https://example.com/brochure"
-                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
-                    </div>
-
-                  </div>
-
+                  <h5 class="mb-4 text-sm font-semibold text-slate-700">Button 3</h5>
+                  <app-course-cta-row
+                    [textPlaceholder]="'Download Brochure'"
+                    [urlPlaceholder]="'https://example.com/brochure'"
+                    [(buttonText)]="courseItem.buttonText3"
+                    [(buttonUrl)]="courseItem.buttonUrl3"
+                    (contentChange)="emitChange()" />
                 </div>
 
               </div>

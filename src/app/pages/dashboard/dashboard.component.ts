@@ -29,6 +29,9 @@ import {
   formatLocalDateToYMD,
 } from './utils/ads-dashboard-calculator.util';
 import { generateAdsDashboardMockLeads } from './utils/ads-dashboard-mock.util';
+import { DashboardPulseQualityComponent } from './components/dashboard-pulse-quality/dashboard-pulse-quality.component';
+import { DashboardPacingBreakdownsComponent } from './components/dashboard-pacing-breakdowns/dashboard-pacing-breakdowns.component';
+import { DashboardAttributionSidebarComponent } from './components/dashboard-attribution-sidebar/dashboard-attribution-sidebar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -40,6 +43,9 @@ import { generateAdsDashboardMockLeads } from './utils/ads-dashboard-mock.util';
     TopbarComponent,
     SidebarComponent,
     DateRangePickerComponent,
+    DashboardPulseQualityComponent,
+    DashboardPacingBreakdownsComponent,
+    DashboardAttributionSidebarComponent,
   ],
   templateUrl: './dashboard.component.html',
 })

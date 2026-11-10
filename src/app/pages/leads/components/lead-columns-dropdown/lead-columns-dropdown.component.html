@@ -1,0 +1,120 @@
+<div id="columns-dropdown-wrapper" class="relative">
+  <button type="button" (click)="onToggleOpen()"
+    class="inline-flex h-8.5 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 cursor-pointer">
+    <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+    </svg>
+    Columns
+    <span class="rounded-full bg-slate-100 px-1.5 py-0.2 text-[10px] font-bold text-slate-600">
+      {{ visibleColumnCount }}
+    </span>
+  </button>
+
+  @if (isOpen) {
+  <div
+    class="absolute right-0 z-30 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 overflow-hidden">
+    
+    <!-- HEADER -->
+    <div class="border-b border-slate-100 bg-slate-50/70 px-3 py-2 flex items-center justify-between gap-2">
+      <div class="min-w-0 flex-1">
+        <div class="text-xs font-bold text-slate-800">Customize Columns</div>
+        <div class="text-[10px] text-slate-400 truncate">Drag to reorder • Check to toggle</div>
+      </div>
+      <span class="inline-flex shrink-0 items-center whitespace-nowrap rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 border border-indigo-100/80">
+        {{ visibleColumnCount }} visible
+      </span>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-3 py-1.5 bg-white text-[11px]">
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="onToggleAll(true)" class="font-semibold text-indigo-600 hover:text-indigo-800 transition cursor-pointer">
+          Show all
+        </button>
+        <span class="text-slate-300">•</span>
+        <button type="button" (click)="onToggleAll(false)" class="font-semibold text-slate-500 hover:text-slate-700 transition cursor-pointer">
+          Hide all
+        </button>
+      </div>
+      <button type="button" (click)="onResetOrder()" class="text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition cursor-pointer" title="Reset to original column order">
+        Reset order
+      </button>
+    </div>
+
+    <!-- DRAGGABLE COLUMN LIST -->
+    <div class="max-h-80 overflow-y-auto p-1.5 space-y-1">
+      @for (col of columns; track col.key; let idx = $index) {
+      <div
+        draggable="true"
+        (dragstart)="onDragStart($event, idx)"
+        (dragover)="onDragOver($event, idx)"
+        (dragleave)="onDragLeave($event, idx)"
+        (drop)="onDrop($event, idx)"
+        (dragend)="onDragEnd()"
+        [class.opacity-40]="draggedColIndex === idx"
+        [class.border-indigo-400]="dragOverColIndex === idx"
+        [class.bg-indigo-50]="dragOverColIndex === idx"
+        class="group/item flex items-center justify-between rounded-lg border border-transparent px-2 py-1.5 transition select-none hover:bg-slate-50 hover:border-slate-200">
+        
+        <!-- LEFT: DRAG HANDLE + CHECKBOX + LABEL -->
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <!-- DRAG HANDLE -->
+          <span class="cursor-grab text-slate-300 group-hover/item:text-slate-500 shrink-0 touch-none" title="Drag to reorder">
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="8" cy="6" r="1.5"/>
+              <circle cx="16" cy="6" r="1.5"/>
+              <circle cx="8" cy="12" r="1.5"/>
+              <circle cx="16" cy="12" r="1.5"/>
+              <circle cx="8" cy="18" r="1.5"/>
+              <circle cx="16" cy="18" r="1.5"/>
+            </svg>
+          </span>
+
+          <!-- CHECKBOX -->
+          <input type="checkbox" [checked]="col.visible" (change)="onToggleColumn(col.key)" (click)="$event.stopPropagation()"
+            class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+
+          <!-- LABEL -->
+          <span class="truncate font-medium text-xs" [class.text-slate-800]="col.visible" [class.text-slate-400]="!col.visible">
+            {{ col.label }}
+          </span>
+        </div>
+
+        <!-- RIGHT: UP/DOWN BUTTONS -->
+        <div class="flex items-center gap-0.5 shrink-0 opacity-60 group-hover/item:opacity-100 transition">
+          <button type="button" (click)="onMove(idx, 'up', $event)" [disabled]="idx === 0"
+            class="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer"
+            title="Move column up">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+          <button type="button" (click)="onMove(idx, 'down', $event)" [disabled]="idx === columns.length - 1"
+            class="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer"
+            title="Move column down">
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+      }
+    </div>
+
+    <!-- FOOTER: RESET WIDTHS -->
+    <div class="border-t border-slate-100 bg-slate-50/50 p-2">
+      <button type="button" (click)="onResetWidths()"
+        class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-600 shadow-2xs hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Reset Column Widths
+      </button>
+    </div>
+
+  </div>
+  }
+</div>

@@ -11,13 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastService } from '../../core/services/toast.service';
-import { Subject, Subscription, of } from 'rxjs';
-import {
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  switchMap,
-} from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { TopbarComponent } from '../../components/topbar/topbar.component';
@@ -30,31 +24,39 @@ import {
   LeadQueryParams,
   LeadService,
 } from '../../services/lead.service';
-import { ColumnConfig } from './models/lead-analysis.model';
-import { isTestLead, isOtpVerified, normalizePhone } from './utils/lead-filters.util';
+import { isTestLead } from './utils/lead-filters.util';
+import {
+  BACKEND_SORTABLE_COLUMNS,
+  ColumnConfig,
+  DEFAULT_COL_WIDTHS,
+  DEFAULT_LEAD_COLUMNS,
+  FILTER_KEY_TO_PARAM_MAP,
+} from './models/lead-columns.config';
+import { LeadColumnManager } from './utils/lead-column-manager';
+import {
+  BackendLeadFilters,
+  DynamicFilterOptionGroup,
+} from './models/lead-filter.types';
+import {
+  buildAdvancedFilterGroups,
+  computeActiveAdvancedFilterCount,
+  computeActiveBackendFilterCount,
+  computeHasActiveFilters,
+  constructLeadQueryParams,
+  cycleSortOrder,
+  formatFilterLabel,
+} from './utils/lead-query.builder';
+import {
+  computeDisplayedPages,
+  computeSerialNumber,
+  downloadBlobAsFile,
+  extractCellValue,
+} from './utils/lead-table.util';
+import { LeadDetailDrawerComponent } from './components/lead-detail-drawer/lead-detail-drawer.component';
+import { LeadColumnsDropdownComponent } from './components/lead-columns-dropdown/lead-columns-dropdown.component';
+import { LeadDataCoordinator } from './services/lead-data.coordinator';
 
-export type { ColumnConfig };
-
-export interface BackendLeadFilters {
-  otp_validation: string;
-  city: string;
-  branch: string;
-  class: string;
-  board: string;
-  class_category: string;
-  reservation_type: string;
-  redirect_from: string;
-  utm_source: string;
-  utm_medium: string;
-  utm_campaign: string;
-  [key: string]: string;
-}
-
-export interface DynamicFilterOptionGroup {
-  key: string;
-  label: string;
-  options: string[];
-}
+export type { ColumnConfig, BackendLeadFilters, DynamicFilterOptionGroup };
 
 @Component({
   selector: 'app-leads',
@@ -66,6 +68,8 @@ export interface DynamicFilterOptionGroup {
     TopbarComponent,
     SidebarComponent,
     DateRangePickerComponent,
+    LeadDetailDrawerComponent,
+    LeadColumnsDropdownComponent,
   ],
   templateUrl: './leads.component.html',
 })
@@ -75,35 +79,31 @@ export class LeadsComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly cdr = inject(ChangeDetectorRef);
+  private readonly coordinator = inject(LeadDataCoordinator);
 
+  readonly columnManager = new LeadColumnManager();
   private routeSub?: Subscription;
-  private fetchSub?: Subscription;
-  private searchSubject = new Subject<string>();
-  private searchSub?: Subscription;
-  private excludeSearchSubject = new Subject<string>();
-  private excludeSearchSub?: Subscription;
-  private exactDuplicateSubject = new Subject<void>();
-  private exactDuplicateSub?: Subscription;
-  private dateSubject = new Subject<void>();
-  private dateSub?: Subscription;
-  private readonly fetchTrigger$ = new Subject<Record<string, unknown>>();
-  private pageCache = new Map<string, { leads: LeadItem[]; meta: LeadMeta }>();
-  private currentCacheKey = '';
 
   readonly skeletonRows = Array(10).fill(0);
 
-  // Lead modules
+  // Module state
   modules: LeadModule[] = [];
   selectedModuleKey = '';
   isLoadingModules = false;
+  activeModuleLabel = '';
 
-  // Leads data
+  // Leads list & pagination
   leads: LeadItem[] = [];
   meta: LeadMeta = { page: 1, per_page: 25, total: 0, filtered: 0, total_pages: 1 };
   isLoadingLeads = false;
   loadError = '';
+  cachedDisplayedPages: number[] = [];
 
-  // Query & Filter state
+  get displayedLeads(): LeadItem[] {
+    return this.leads;
+  }
+
+  // Filter & Query state
   searchTerm = '';
   excludeSearchTerm = '';
   excludeTest = false;
@@ -116,12 +116,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
   currentPage = 1;
   isExporting = false;
 
-  // Columns & dropdown
+  // Dropdown open state
   isColumnsDropdownOpen = false;
-  private readonly STORAGE_KEY = 'leads_column_prefs';
-  private readonly WIDTHS_STORAGE_KEY = 'leads_column_widths';
-
-  // Backend Filter State & Options
   filterOptions: LeadFilterOptions | null = null;
   isLoadingFilterOptions = false;
   showMoreFilters = false;
@@ -140,233 +136,83 @@ export class LeadsComponent implements OnInit, OnDestroy {
     utm_campaign: '',
   };
 
-  // Safe sorting columns supported by backend:
-  // ['id', 'entrydate', 'name', 'phone', 'city', 'branch', 'class', 'otp_validation', 'utm_source']
-  readonly backendSortableColumns = new Set([
-    'id',
-    'entrydate',
-    'name',
-    'phone',
-    'city',
-    'branch',
-    'class',
-    'otp_validation',
-    'utm_source',
-  ]);
-
-  // Primary filters shown directly in the top toolbar (remaining filters reside in More Filters)
+  readonly backendSortableColumns = BACKEND_SORTABLE_COLUMNS;
   readonly primaryFilterKeys = new Set<string>();
+  readonly filterKeyToParamMap = FILTER_KEY_TO_PARAM_MAP;
+  readonly defaultColumns = DEFAULT_LEAD_COLUMNS;
+  readonly defaultColWidths = DEFAULT_COL_WIDTHS;
 
-  // Param mapping between backend filter-options keys and API query params
-  readonly filterKeyToParamMap: Record<string, string> = {
-    cities: 'city',
-    city: 'city',
-    branches: 'branch',
-    branch: 'branch',
-    boards: 'board',
-    board: 'board',
-    classes: 'class',
-    class: 'class',
-    reservation_types: 'reservation_type',
-    reservation_type: 'reservation_type',
-    utm_sources: 'utm_source',
-    utm_source: 'utm_source',
-    utm_mediums: 'utm_medium',
-    utm_medium: 'utm_medium',
-    utm_campaigns: 'utm_campaign',
-    utm_campaign: 'utm_campaign',
-    otp_validation: 'otp_validation',
-    redirect_from: 'redirect_from',
-    class_category: 'class_category',
-  };
+  get columns(): ColumnConfig[] { return this.columnManager.columns; }
+  set columns(val: ColumnConfig[]) { this.columnManager.columns = val; this.columnManager.updateColumnCache(); }
+  get visibleColumns(): ColumnConfig[] { return this.columnManager.visibleColumns; }
+  get visibleColumnCount(): number { return this.columnManager.visibleColumnCount; }
+  get colVisibility(): Record<string, boolean> { return this.columnManager.colVisibility; }
+  get colWidths(): Record<string, number> { return this.columnManager.colWidths; }
+  set colWidths(val: Record<string, number>) { this.columnManager.colWidths = val; }
+  get draggedColIndex(): number | null { return this.columnManager.draggedColIndex; }
+  set draggedColIndex(val: number | null) { this.columnManager.draggedColIndex = val; }
+  get dragOverColIndex(): number | null { return this.columnManager.dragOverColIndex; }
+  set dragOverColIndex(val: number | null) { this.columnManager.dragOverColIndex = val; }
 
-  get cityOptions(): string[] {
-    return this.filterOptions?.['cities'] || this.filterOptions?.['city'] || [];
-  }
-
-  get branchOptions(): string[] {
-    return this.filterOptions?.['branches'] || this.filterOptions?.['branch'] || [];
-  }
-
-  get classOptions(): string[] {
-    return this.filterOptions?.['classes'] || this.filterOptions?.['class'] || [];
-  }
-
-  get boardOptions(): string[] {
-    return this.filterOptions?.['boards'] || this.filterOptions?.['board'] || [];
-  }
+  get cityOptions(): string[] { return this.filterOptions?.['cities'] || this.filterOptions?.['city'] || []; }
+  get branchOptions(): string[] { return this.filterOptions?.['branches'] || this.filterOptions?.['branch'] || []; }
+  get classOptions(): string[] { return this.filterOptions?.['classes'] || this.filterOptions?.['class'] || []; }
+  get boardOptions(): string[] { return this.filterOptions?.['boards'] || this.filterOptions?.['board'] || []; }
 
   sortKey: string | null = 'id';
   sortOrder: 'asc' | 'desc' | null = 'desc';
 
-  // Lead Details Drawer / Modal state
   selectedLeadForDetail: LeadItem | null = null;
   isLoadingLeadDetail = false;
-
-  readonly defaultColumns: ColumnConfig[] = [
-    { key: 'sno', label: '#', visible: true, optional: true },
-    { key: 'id', label: 'ID', visible: true, optional: true },
-    { key: 'entrydate', label: 'Entry Date', visible: true, optional: true },
-    { key: 'name', label: 'Name', visible: true, optional: true },
-    { key: 'phone', label: 'Phone', visible: true, optional: true },
-    { key: 'parent_email', label: 'Email', visible: true, optional: true },
-    { key: 'otp_validation', label: 'OTP', visible: true, optional: true },
-    { key: 'city', label: 'City', visible: true, optional: true },
-    { key: 'branch', label: 'Branch', visible: true, optional: true },
-    { key: 'board', label: 'Board', visible: true, optional: true },
-    { key: 'class', label: 'Class', visible: true, optional: true },
-    { key: 'class_category', label: 'Class Category', visible: true, optional: true },
-    { key: 'stream', label: 'Stream', visible: true, optional: true },
-    { key: 'course', label: 'Course', visible: true, optional: true },
-    { key: 'reservation_type', label: 'Reservation', visible: true, optional: true },
-    { key: 'utm_source', label: 'UTM Source', visible: true, optional: true },
-    { key: 'utm_campaign', label: 'UTM Campaign', visible: true, optional: true },
-    { key: 'utm_medium', label: 'UTM Medium', visible: false, optional: true },
-    { key: 'utm_content', label: 'UTM Content', visible: false, optional: true },
-    { key: 'utm_term', label: 'UTM Term', visible: false, optional: true },
-    { key: 'redirect_from', label: 'Redirect From', visible: false, optional: true },
-    { key: 'page_section', label: 'Page Section', visible: false, optional: true },
-  ];
-
-  columns: ColumnConfig[] = this.defaultColumns.map((c) => ({ ...c }));
-  draggedColIndex: number | null = null;
-  dragOverColIndex: number | null = null;
-
-  readonly defaultColWidths: Record<string, number> = {
-    sno: 50,
-    id: 65,
-    entrydate: 140,
-    name: 150,
-    phone: 110,
-    parent_email: 180,
-    otp_validation: 85,
-    city: 100,
-    branch: 110,
-    board: 80,
-    class: 90,
-    class_category: 100,
-    stream: 100,
-    course: 110,
-    reservation_type: 110,
-    utm_source: 130,
-    utm_campaign: 140,
-    utm_medium: 110,
-    utm_content: 110,
-    utm_term: 110,
-    redirect_from: 130,
-    page_section: 120,
-  };
-  colWidths: Record<string, number> = { ...this.defaultColWidths };
-  private resizingColKey: string | null = null;
-  private startX = 0;
-  private startWidth = 0;
-
-  colVisibility: Record<string, boolean> = {};
-  visibleColumns: ColumnConfig[] = [];
-  visibleColumnCount = 0;
-  activeModuleLabel = '';
-  cachedDisplayedPages: number[] = [];
 
   get activeModule(): LeadModule | undefined {
     return this.modules.find((m) => m.key === this.selectedModuleKey);
   }
 
   ngOnInit(): void {
-    this.loadColumnPrefs();
-    this.loadColWidths();
-    this.updateColumnCache();
+    this.columnManager.loadColumnPrefs();
+    this.columnManager.loadColWidths();
+    this.columnManager.updateColumnCache();
 
-    this.fetchSub = this.fetchTrigger$
-      .pipe(
-        switchMap((params) =>
-          this.leadService.getLeads(params as any).pipe(
-            catchError((err) => {
-              console.error('Fetch leads error:', err);
-              return of({
-                success: false,
-                message: 'Failed to load leads from server.',
-                data: [] as LeadItem[],
-                meta: {} as LeadMeta,
-              });
-            })
-          )
-        )
-      )
-      .subscribe((response) => {
+    this.coordinator.init({
+      onFetchStart: () => {
+        this.isLoadingLeads = true;
+        this.loadError = '';
+        this.cdr.markForCheck();
+      },
+      onFetchSuccess: (data, meta, key) => {
         this.isLoadingLeads = false;
-        if (response.success) {
-          this.leads = response.data || [];
-          this.meta = response.meta ?? {
-            page: this.currentPage,
-            per_page: this.perPage,
-            total: this.leads.length,
-            filtered: this.leads.length,
-            total_pages: 1,
-          };
-          this.pageCache.set(this.currentCacheKey, {
-            leads: this.leads,
-            meta: this.meta,
-          });
-        } else {
-          this.leads = [];
-          this.loadError = response.message || 'Unable to load leads.';
-        }
+        this.leads = data;
+        this.meta = meta;
+        this.coordinator.setCache(key, { leads: data, meta });
         this.updateDisplayedPages();
         this.cdr.markForCheck();
-      });
-
-    this.searchSub = this.searchSubject
-      .pipe(debounceTime(350), distinctUntilChanged())
-      .subscribe((term) => {
+      },
+      onFetchError: (error) => {
+        this.isLoadingLeads = false;
+        this.leads = [];
+        this.loadError = error;
+        this.updateDisplayedPages();
+        this.cdr.markForCheck();
+      },
+      onSearchChange: (term) => {
         this.searchTerm = term;
-        this.currentPage = 1;
-        this.clearPageCache();
-        this.fetchLeads();
-      });
-
-    this.excludeSearchSub = this.excludeSearchSubject
-      .pipe(debounceTime(350), distinctUntilChanged())
-      .subscribe((term) => {
+        this.onFilterTrigger();
+      },
+      onExcludeSearchChange: (term) => {
         this.excludeSearchTerm = term;
-        this.currentPage = 1;
-        this.clearPageCache();
-        this.fetchLeads();
-      });
-
-    this.exactDuplicateSub = this.exactDuplicateSubject
-      .pipe(debounceTime(350))
-      .subscribe(() => {
-        this.currentPage = 1;
-        this.clearPageCache();
-        this.fetchLeads();
-      });
-
-    this.dateSub = this.dateSubject
-      .pipe(debounceTime(400))
-      .subscribe(() => {
-        this.currentPage = 1;
-        this.clearPageCache();
-        this.fetchLeads();
-      });
+        this.onFilterTrigger();
+      },
+      onExactDuplicateChange: () => this.onFilterTrigger(),
+      onDateChange: () => this.onFilterTrigger(),
+    });
 
     this.loadModules();
   }
 
   ngOnDestroy(): void {
     this.routeSub?.unsubscribe();
-    this.searchSub?.unsubscribe();
-    this.excludeSearchSub?.unsubscribe();
-    this.exactDuplicateSub?.unsubscribe();
-    this.fetchSub?.unsubscribe();
-    this.dateSub?.unsubscribe();
-    this.fetchTrigger$.complete();
-    this.searchSubject.complete();
-    this.excludeSearchSubject.complete();
-    this.exactDuplicateSubject.complete();
-    this.dateSubject.complete();
-
-    document.removeEventListener('mousemove', this.onResizing);
-    document.removeEventListener('mouseup', this.onResizeEnd);
+    this.coordinator.destroy();
   }
 
   @HostListener('document:click', ['$event'])
@@ -380,231 +226,17 @@ export class LeadsComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleColumn(key: string): void {
-    const col = this.columns.find((c) => c.key === key);
-    if (col) {
-      col.visible = !col.visible;
-      this.saveColumnPrefs();
-      this.updateColumnCache();
-      this.cdr.markForCheck();
-    }
-  }
-
-  private updateColumnCache(): void {
-    const map: Record<string, boolean> = {};
-    const visible: ColumnConfig[] = [];
-    for (const col of this.columns) {
-      map[col.key] = col.visible;
-      if (col.visible) visible.push(col);
-    }
-    this.colVisibility = map;
-    this.visibleColumns = visible;
-    this.visibleColumnCount = visible.length;
-  }
-
-  private loadColumnPrefs(): void {
-    try {
-      const saved = localStorage.getItem(this.STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.order)) {
-          const map = new Map(this.defaultColumns.map((c) => [c.key, { ...c }]));
-          const reordered: ColumnConfig[] = [];
-          
-          // If 'sno' is not in saved order, make sure it is placed first
-          if (!parsed.order.includes('sno') && map.has('sno')) {
-            const snoCol = map.get('sno')!;
-            if (parsed.visibility && parsed.visibility['sno'] !== undefined) {
-              snoCol.visible = Boolean(parsed.visibility['sno']);
-            }
-            reordered.push(snoCol);
-            map.delete('sno');
-          }
-
-          for (const key of parsed.order) {
-            const col = map.get(key);
-            if (col) {
-              if (parsed.visibility && parsed.visibility[key] !== undefined) {
-                col.visible = Boolean(parsed.visibility[key]);
-              }
-              reordered.push(col);
-              map.delete(key);
-            }
-          }
-          // Append any remaining default columns that might not have been in saved order
-          for (const col of map.values()) {
-            if (parsed.visibility && parsed.visibility[col.key] !== undefined) {
-              col.visible = Boolean(parsed.visibility[col.key]);
-            }
-            reordered.push(col);
-          }
-          this.columns = reordered;
-        } else if (parsed && typeof parsed === 'object') {
-          // Legacy format: Record<string, boolean>
-          this.columns = this.defaultColumns.map((c) => ({
-            ...c,
-            visible: parsed[c.key] !== undefined ? Boolean(parsed[c.key]) : c.visible,
-          }));
-        }
-      }
-    } catch {}
-  }
-
-  private saveColumnPrefs(): void {
-    try {
-      const prefs = {
-        order: this.columns.map((c) => c.key),
-        visibility: this.columns.reduce(
-          (acc, c) => {
-            acc[c.key] = c.visible;
-            return acc;
-          },
-          {} as Record<string, boolean>
-        ),
-      };
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(prefs));
-    } catch {}
-  }
-
-  onColumnDragStart(event: DragEvent, index: number): void {
-    this.draggedColIndex = index;
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', index.toString());
-    }
-  }
-
-  onColumnDragOver(event: DragEvent, index: number): void {
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move';
-    }
-    if (this.draggedColIndex === null) return;
-    if (this.dragOverColIndex !== index) {
-      this.dragOverColIndex = index;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onColumnDragLeave(event: DragEvent, index: number): void {
-    const target = event.currentTarget as HTMLElement;
-    const related = event.relatedTarget as Node | null;
-    if (!target.contains(related)) {
-      if (this.dragOverColIndex === index) {
-        this.dragOverColIndex = null;
-        this.cdr.markForCheck();
-      }
-    }
-  }
-
-  onColumnDrop(event: DragEvent, targetIndex: number): void {
-    event.preventDefault();
-    if (this.draggedColIndex === null || this.draggedColIndex === targetIndex) {
-      this.draggedColIndex = null;
-      this.dragOverColIndex = null;
-      return;
-    }
-
-    const item = this.columns.splice(this.draggedColIndex, 1)[0];
-    this.columns.splice(targetIndex, 0, item);
-
-    this.draggedColIndex = null;
-    this.dragOverColIndex = null;
-
-    this.saveColumnPrefs();
-    this.updateColumnCache();
-    this.cdr.markForCheck();
-  }
-
-  onColumnDragEnd(): void {
-    this.draggedColIndex = null;
-    this.dragOverColIndex = null;
-    this.cdr.markForCheck();
-  }
-
-  moveColumn(index: number, direction: 'up' | 'down', event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= this.columns.length) return;
-
-    const item = this.columns.splice(index, 1)[0];
-    this.columns.splice(targetIndex, 0, item);
-
-    this.saveColumnPrefs();
-    this.updateColumnCache();
-    this.cdr.markForCheck();
-  }
-
-  resetColumnOrder(): void {
-    this.columns = this.defaultColumns.map((c) => ({ ...c }));
-    this.saveColumnPrefs();
-    this.updateColumnCache();
-    this.toastService.success('Column order and visibility reset to default.');
-    this.cdr.markForCheck();
-  }
-
-  toggleAllColumns(selectAll: boolean): void {
-    this.columns.forEach((c) => (c.visible = selectAll));
-    if (!selectAll && this.columns.length > 0) {
-      this.columns[0].visible = true;
-    }
-    this.saveColumnPrefs();
-    this.updateColumnCache();
-    this.cdr.markForCheck();
-  }
-
-  onResizeStart(event: MouseEvent, colKey: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.resizingColKey = colKey;
-    this.startX = event.clientX;
-    const th = (event.target as HTMLElement).closest('th');
-    this.startWidth = th ? th.offsetWidth : (this.colWidths[colKey] || 100);
-    document.addEventListener('mousemove', this.onResizing);
-    document.addEventListener('mouseup', this.onResizeEnd);
-  }
-
-  private onResizing = (event: MouseEvent): void => {
-    if (!this.resizingColKey) return;
-    const delta = event.clientX - this.startX;
-    const newWidth = Math.max(45, this.startWidth + delta);
-    this.colWidths[this.resizingColKey] = newWidth;
-    this.cdr.markForCheck();
-  };
-
-  private onResizeEnd = (): void => {
-    if (this.resizingColKey) {
-      this.saveColWidths();
-      this.resizingColKey = null;
-    }
-    document.removeEventListener('mousemove', this.onResizing);
-    document.removeEventListener('mouseup', this.onResizeEnd);
-    this.cdr.markForCheck();
-  };
-
-  private loadColWidths(): void {
-    try {
-      const saved = localStorage.getItem(this.WIDTHS_STORAGE_KEY);
-      if (saved) {
-        this.colWidths = { ...this.defaultColWidths, ...JSON.parse(saved) };
-      }
-    } catch {}
-  }
-
-  private saveColWidths(): void {
-    try {
-      localStorage.setItem(this.WIDTHS_STORAGE_KEY, JSON.stringify(this.colWidths));
-    } catch {}
-  }
-
-  resetColWidths(): void {
-    this.colWidths = { ...this.defaultColWidths };
-    this.saveColWidths();
-    this.cdr.markForCheck();
-  }
+  toggleColumn(key: string): void { this.columnManager.toggleColumn(key); this.cdr.markForCheck(); }
+  onColumnDragStart(e: DragEvent, idx: number): void { this.columnManager.draggedColIndex = idx; e.dataTransfer?.setData('text/plain', idx.toString()); }
+  onColumnDragOver(e: DragEvent, idx: number): void { e.preventDefault(); if (this.columnManager.dragOverColIndex !== idx) { this.columnManager.dragOverColIndex = idx; this.cdr.markForCheck(); } }
+  onColumnDragLeave(e: DragEvent, idx: number): void { if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) { this.columnManager.dragOverColIndex = null; this.cdr.markForCheck(); } }
+  onColumnDrop(e: DragEvent, idx: number): void { e.preventDefault(); this.columnManager.handleDrop(idx); this.cdr.markForCheck(); }
+  onColumnDragEnd(): void { this.columnManager.draggedColIndex = null; this.columnManager.dragOverColIndex = null; this.cdr.markForCheck(); }
+  moveColumn(idx: number, dir: 'up' | 'down', e?: Event): void { e?.stopPropagation(); e?.preventDefault(); this.columnManager.moveColumn(idx, dir); this.cdr.markForCheck(); }
+  resetColumnOrder(): void { this.columnManager.resetColumnOrder(); this.cdr.markForCheck(); }
+  toggleAllColumns(visible: boolean): void { this.columnManager.toggleAllColumns(visible); this.cdr.markForCheck(); }
+  onResizeStart(e: MouseEvent, key: string): void { this.columnManager.startResize(e, key, () => this.cdr.markForCheck()); }
+  resetColWidths(): void { this.columnManager.resetColWidths(); this.cdr.markForCheck(); }
 
   loadModules(): void {
     this.isLoadingModules = true;
@@ -660,18 +292,9 @@ export class LeadsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.activeModuleLabel = this.modules.find((m) => m.key === this.selectedModuleKey)?.label ?? '';
-    this.currentPage = 1;
-    this.searchTerm = '';
-    this.excludeSearchTerm = '';
-    this.excludeTest = false;
-    this.exactName = '';
-    this.exactPhone = '';
-    this.phoneMode = 'all';
-    this.dateFrom = '';
-    this.dateTo = '';
-    this.resetBackendFilters();
-    this.clearPageCache();
+    const matched = this.modules.find((m) => m.key === this.selectedModuleKey);
+    this.activeModuleLabel = matched ? matched.label : this.selectedModuleKey;
+    this.resetFilters();
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -680,32 +303,29 @@ export class LeadsComponent implements OnInit, OnDestroy {
     });
 
     this.loadFilterOptions();
-    this.fetchLeads();
   }
 
   loadFilterOptions(): void {
     if (!this.selectedModuleKey) return;
     this.isLoadingFilterOptions = true;
+    this.cdr.markForCheck();
+
     this.leadService.getFilterOptions(this.selectedModuleKey).subscribe({
-      next: (res) => {
+      next: (response) => {
         this.isLoadingFilterOptions = false;
-        if (res.success && res.data) {
-          this.filterOptions = res.data;
-          // Ensure all returned filter keys exist in backendFilters for two-way binding
-          for (const key of Object.keys(res.data)) {
+        if (response.success && response.data) {
+          this.filterOptions = response.data;
+          for (const key of Object.keys(response.data)) {
             if (!(key in this.backendFilters)) {
               this.backendFilters[key] = '';
             }
           }
-        } else {
-          this.filterOptions = null;
         }
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoadingFilterOptions = false;
-        this.filterOptions = null;
-        console.warn('Could not load filter options:', err);
+        console.error('Load filter options error:', err);
         this.cdr.markForCheck();
       },
     });
@@ -714,119 +334,66 @@ export class LeadsComponent implements OnInit, OnDestroy {
   fetchLeads(): void {
     if (!this.selectedModuleKey) return;
 
-    this.loadError = '';
-    this.currentCacheKey = this.buildCacheKey();
-    const cached = this.pageCache.get(this.currentCacheKey);
-    if (cached) {
+    const params = this.buildParams();
+    const cacheKey = JSON.stringify(params);
+
+    if (this.coordinator.hasCache(cacheKey)) {
+      const cached = this.coordinator.getCache(cacheKey)!;
       this.leads = cached.leads;
       this.meta = cached.meta;
-      this.isLoadingLeads = false;
       this.updateDisplayedPages();
       this.cdr.markForCheck();
       return;
     }
 
-    this.isLoadingLeads = true;
-    this.cdr.markForCheck();
-    this.fetchTrigger$.next(this.buildParams());
+    this.coordinator.triggerFetch(params);
   }
 
-  private buildParams(): Record<string, unknown> {
-    const params: Record<string, unknown> = {
-      module: this.selectedModuleKey,
-      page: this.currentPage,
-      per_page: this.perPage,
-      phone_mode: this.phoneMode,
-    };
-    if (this.searchTerm.trim()) params['search'] = this.searchTerm.trim();
-    if (this.excludeSearchTerm.trim()) params['exclude_search'] = this.excludeSearchTerm.trim();
-    if (this.exactName.trim()) params['name'] = this.exactName.trim();
-    if (this.exactPhone.trim()) params['phone'] = this.exactPhone.trim();
-    if (this.dateFrom) params['date_from'] = this.dateFrom;
-    if (this.dateTo) params['date_to'] = this.dateTo;
-
-    if (this.sortKey && this.backendSortableColumns.has(this.sortKey)) {
-      params['sort_by'] = this.sortKey;
-      if (this.sortOrder) params['sort_order'] = this.sortOrder;
-    }
-
-    // Dynamically attach all active filters present in backendFilters, mapping to proper query params
-    for (const [key, value] of Object.entries(this.backendFilters)) {
-      if (typeof value === 'string' && value.trim()) {
-        const queryParamKey = this.filterKeyToParamMap[key] || key;
-        params[queryParamKey] = value.trim();
-      }
-    }
-
-    return params;
+  buildParams(): LeadQueryParams {
+    return constructLeadQueryParams({
+      selectedModuleKey: this.selectedModuleKey,
+      currentPage: this.currentPage,
+      perPage: this.perPage,
+      phoneMode: this.phoneMode,
+      searchTerm: this.searchTerm,
+      excludeSearchTerm: this.excludeSearchTerm,
+      exactName: this.exactName,
+      exactPhone: this.exactPhone,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+      sortKey: this.sortKey,
+      sortOrder: this.sortOrder,
+      backendFilters: this.backendFilters,
+    });
   }
 
-  private buildCacheKey(): string {
-    const p = this.buildParams();
-    return Object.keys(p)
-      .sort()
-      .map((k) => `${k}=${p[k]}`)
-      .join('&');
+  clearPageCache(): void {
+    this.coordinator.clearCache();
   }
 
-  private clearPageCache(): void {
-    this.pageCache.clear();
+  private onFilterTrigger(): void {
+    this.currentPage = 1;
+    this.clearPageCache();
+    this.fetchLeads();
   }
 
-  onSearchInput(value: string): void {
-    this.searchTerm = value;
-    this.searchSubject.next(value);
-  }
-
-  onExcludeSearchInput(value: string): void {
-    this.excludeSearchTerm = value;
-    this.excludeSearchSubject.next(value);
-  }
-
-  onExactDuplicateFilterChange(): void {
-    this.exactDuplicateSubject.next();
-  }
+  onSearchInput(term: string): void { this.coordinator.dispatchSearch(term); }
+  onExcludeSearchInput(term: string): void { this.coordinator.dispatchExcludeSearch(term); }
+  onExactDuplicateFilterChange(): void { this.coordinator.dispatchExactDuplicate(); }
 
   onDateRangeChange(range: { startDate: string; endDate: string }): void {
     this.dateFrom = range.startDate;
     this.dateTo = range.endDate;
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.coordinator.dispatchDate();
   }
 
-  onPerPageChange(): void {
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
-  }
-
-  onBackendFilterChange(): void {
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
-  }
+  onPerPageChange(): void { this.onFilterTrigger(); }
+  onBackendFilterChange(): void { this.onFilterTrigger(); }
 
   resetBackendFilters(): void {
-    const resetObj: BackendLeadFilters = {
-      otp_validation: '',
-      city: '',
-      branch: '',
-      class: '',
-      board: '',
-      class_category: '',
-      reservation_type: '',
-      redirect_from: '',
-      utm_source: '',
-      utm_medium: '',
-      utm_campaign: '',
-    };
-    if (this.filterOptions) {
-      for (const key of Object.keys(this.filterOptions)) {
-        resetObj[key] = '';
-      }
+    for (const key of Object.keys(this.backendFilters)) {
+      this.backendFilters[key] = '';
     }
-    this.backendFilters = resetObj;
   }
 
   resetAdvancedFilters(): void {
@@ -837,6 +404,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
     }
     this.exactName = '';
     this.exactPhone = '';
+    this.excludeSearchTerm = '';
   }
 
   resetFilters(): void {
@@ -851,38 +419,32 @@ export class LeadsComponent implements OnInit, OnDestroy {
     this.sortKey = 'id';
     this.sortOrder = 'desc';
     this.resetBackendFilters();
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.onFilterTrigger();
   }
 
   get hasActiveFilters(): boolean {
-    return Boolean(
-      this.searchTerm.trim() ||
-      this.excludeSearchTerm.trim() ||
-      this.excludeTest ||
-      this.exactName.trim() ||
-      this.exactPhone.trim() ||
-      this.phoneMode !== 'all' ||
-      this.dateFrom ||
-      this.dateTo ||
-      this.activeBackendFilterCount > 0 ||
-      this.sortKey !== 'id' ||
-      this.sortOrder !== 'desc'
-    );
+    return computeHasActiveFilters({
+      searchTerm: this.searchTerm,
+      excludeSearchTerm: this.excludeSearchTerm,
+      excludeTest: this.excludeTest,
+      exactName: this.exactName,
+      exactPhone: this.exactPhone,
+      phoneMode: this.phoneMode,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+      activeBackendFilterCount: this.activeBackendFilterCount,
+      sortKey: this.sortKey,
+      sortOrder: this.sortOrder,
+    });
   }
 
   toggleExcludeTest(): void {
     this.excludeTest = !this.excludeTest;
     this.excludeSearchTerm = this.excludeTest ? 'test' : '';
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.onFilterTrigger();
   }
 
-  isLeadTest(lead: LeadItem): boolean {
-    return isTestLead(lead);
-  }
+  isLeadTest(lead: LeadItem): boolean { return isTestLead(lead); }
 
   get testLeadsCount(): number {
     return this.leads.filter((l) => isTestLead(l)).length;
@@ -901,168 +463,52 @@ export class LeadsComponent implements OnInit, OnDestroy {
     if (mode) {
       this.phoneMode = mode;
     }
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.onFilterTrigger();
   }
 
   inspectDuplicatePhone(phone: string, event?: MouseEvent): void {
-    if (event) {
-      event.stopPropagation();
-    }
+    if (event) event.stopPropagation();
     if (!phone) return;
     this.exactPhone = phone.trim();
     this.phoneMode = 'all';
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.onFilterTrigger();
     this.toastService.info(`Inspecting all records for phone: ${this.exactPhone}`);
   }
 
   clearExactPhoneFilter(): void {
     this.exactPhone = '';
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    this.onFilterTrigger();
   }
 
   get activeBackendFilterCount(): number {
-    const filterCount = Object.values(this.backendFilters).filter(
-      (v) => typeof v === 'string' && v.trim().length > 0
-    ).length;
-    const exactCount = (this.exactName.trim() ? 1 : 0) + (this.exactPhone.trim() ? 1 : 0);
-    return filterCount + exactCount;
+    return computeActiveBackendFilterCount(this.backendFilters, this.exactName, this.exactPhone);
   }
 
   get activeAdvancedFilterCount(): number {
-    const backendCount = Object.entries(this.backendFilters).filter(
-      ([k, v]) => !this.primaryFilterKeys.has(k) && typeof v === 'string' && v.trim().length > 0
-    ).length;
-    const exactNameCount = this.exactName.trim() ? 1 : 0;
-    const exactPhoneCount = this.exactPhone.trim() ? 1 : 0;
-    return backendCount + exactNameCount + exactPhoneCount;
+    return computeActiveAdvancedFilterCount(
+      this.backendFilters,
+      this.primaryFilterKeys,
+      this.exactName,
+      this.exactPhone,
+      this.excludeSearchTerm,
+      this.excludeTest
+    );
   }
 
-  formatFilterLabel(key: string): string {
-    const knownLabels: Record<string, string> = {
-      cities: 'City',
-      city: 'City',
-      branches: 'Branch',
-      branch: 'Branch',
-      classes: 'Class',
-      class: 'Class',
-      boards: 'Board',
-      board: 'Board',
-      reservation_types: 'Reservation Type',
-      reservation_type: 'Reservation Type',
-      utm_sources: 'UTM Source',
-      utm_source: 'UTM Source',
-      utm_mediums: 'UTM Medium',
-      utm_medium: 'UTM Medium',
-      utm_campaigns: 'UTM Campaign',
-      utm_campaign: 'UTM Campaign',
-      utm_content: 'UTM Content',
-      utm_term: 'UTM Term',
-      redirect_from: 'Redirect From',
-      class_category: 'Class Category',
-      otp_validation: 'OTP Status',
-      page_section: 'Page Section',
-    };
-
-    if (knownLabels[key]) {
-      return knownLabels[key];
-    }
-
-    return key
-      .split('_')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
-  }
-
+  formatFilterLabel(key: string): string { return formatFilterLabel(key); }
   get advancedFilterGroups(): DynamicFilterOptionGroup[] {
-    if (!this.filterOptions) return [];
-
-    const preferredOrder = [
-      'otp_validation',
-      'cities',
-      'city',
-      'branches',
-      'branch',
-      'classes',
-      'class',
-      'boards',
-      'board',
-      'class_category',
-      'reservation_types',
-      'reservation_type',
-      'redirect_from',
-      'utm_sources',
-      'utm_source',
-      'utm_mediums',
-      'utm_medium',
-      'utm_campaigns',
-      'utm_campaign',
-    ];
-
-    const groups: DynamicFilterOptionGroup[] = [];
-    for (const [key, rawOptions] of Object.entries(this.filterOptions)) {
-      if (this.primaryFilterKeys.has(key)) continue;
-      if (!Array.isArray(rawOptions) || rawOptions.length === 0) continue;
-
-      const cleanOptions = rawOptions
-        .filter((opt): opt is string => opt !== null && opt !== undefined && String(opt).trim().length > 0)
-        .map((opt) => String(opt).trim());
-
-      if (cleanOptions.length > 0) {
-        groups.push({
-          key,
-          label: this.formatFilterLabel(key),
-          options: cleanOptions,
-        });
-      }
-    }
-
-    groups.sort((a, b) => {
-      const idxA = preferredOrder.indexOf(a.key);
-      const idxB = preferredOrder.indexOf(b.key);
-      const posA = idxA === -1 ? 999 : idxA;
-      const posB = idxB === -1 ? 999 : idxB;
-      return posA - posB;
-    });
-
-    return groups;
+    return buildAdvancedFilterGroups(this.filterOptions, this.primaryFilterKeys);
   }
 
-  toggleMoreFilters(): void {
-    this.showMoreFilters = !this.showMoreFilters;
-    this.cdr.markForCheck();
-  }
-
-  get displayedLeads(): LeadItem[] {
-    return this.leads;
-  }
-
-  isSortable(key: string): boolean {
-    return this.backendSortableColumns.has(key);
-  }
+  toggleMoreFilters(): void { this.showMoreFilters = !this.showMoreFilters; }
+  isSortable(key: string): boolean { return this.backendSortableColumns.has(key); }
 
   toggleSort(key: string): void {
     if (!this.backendSortableColumns.has(key)) return;
-
-    if (this.sortKey !== key) {
-      this.sortKey = key;
-      this.sortOrder = key === 'entrydate' ? 'desc' : 'asc';
-    } else if (this.sortOrder === 'asc') {
-      this.sortOrder = 'desc';
-    } else if (this.sortOrder === 'desc') {
-      this.sortOrder = 'asc';
-    } else {
-      this.sortOrder = 'desc';
-    }
-
-    this.currentPage = 1;
-    this.clearPageCache();
-    this.fetchLeads();
+    const next = cycleSortOrder(this.sortKey, this.sortOrder, key);
+    this.sortKey = next.key;
+    this.sortOrder = next.order;
+    this.onFilterTrigger();
   }
 
   goToPage(page: number): void {
@@ -1073,26 +519,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
   }
 
   private updateDisplayedPages(): void {
-    const totalPages = this.meta.total_pages || 1;
-    const current = this.currentPage;
-    const pages: number[] = [];
-    let start = Math.max(1, current - 2);
-    let end = Math.min(totalPages, current + 2);
-    if (current <= 3) end = Math.min(totalPages, 5);
-    if (current >= totalPages - 2) start = Math.max(1, totalPages - 4);
-    for (let i = start; i <= end; i++) pages.push(i);
-    this.cachedDisplayedPages = pages;
+    this.cachedDisplayedPages = computeDisplayedPages(this.currentPage, this.meta.total_pages || 1);
   }
 
-  getCellValue(lead: LeadItem, key: string): string {
-    const val = (lead as unknown as Record<string, unknown>)[key];
-    return val !== null && val !== undefined && val !== '' ? String(val) : '—';
-  }
-
+  getCellValue(lead: LeadItem, key: string): string { return extractCellValue(lead, key); }
   getSerialNumber(index: number): number {
-    const page = this.meta.page || this.currentPage || 1;
-    const perPage = this.meta.per_page || this.perPage || 25;
-    return ((page - 1) * perPage) + index + 1;
+    return computeSerialNumber(this.meta.page || this.currentPage || 1, this.meta.per_page || this.perPage || 25, index);
   }
 
   openLeadDetail(lead: LeadItem): void {
@@ -1125,7 +557,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
   exportCsv(): void {
     if (!this.selectedModuleKey || this.isExporting) return;
-
     this.isExporting = true;
     this.cdr.markForCheck();
 
@@ -1136,14 +567,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
     this.leadService.exportLeads(fullParams as LeadQueryParams).subscribe({
       next: (blob) => {
         this.isExporting = false;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `leads_${this.selectedModuleKey}_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        const filename = `leads_${this.selectedModuleKey}_${new Date().toISOString().split('T')[0]}.csv`;
+        downloadBlobAsFile(blob, filename);
         this.toastService.success('Lead export downloaded successfully.');
         this.cdr.markForCheck();
       },

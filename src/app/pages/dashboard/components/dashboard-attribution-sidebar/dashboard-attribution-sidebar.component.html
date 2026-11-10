@@ -1,0 +1,189 @@
+<div class="space-y-4 min-w-0">
+  
+  <!-- LEAD CONVERSION & QUALITY FUNNEL -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="mb-3.5">
+      <h3 class="text-sm font-bold text-slate-900">
+        Lead Quality Funnel
+      </h3>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Conversion pipeline from submission to unique prospect
+      </p>
+    </div>
+
+    @if (calculationResult?.metrics; as m) {
+    <div class="space-y-2.5">
+      
+      <!-- STAGE 1: GROSS INFLOW -->
+      <div class="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-bold text-slate-700 flex items-center gap-1.5">
+            <span class="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-700">1</span>
+            Gross Inflow
+          </span>
+          <span class="font-extrabold text-slate-900">{{ formatNumber(m.totalLeads) }} <span class="text-[10px] text-slate-400 font-semibold">(100%)</span></span>
+        </div>
+        <div class="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+          <div class="h-full bg-slate-700 w-full"></div>
+        </div>
+        <span class="text-[10px] text-slate-400 mt-1 block">Total admission inquiries captured</span>
+      </div>
+
+      <!-- STAGE 2: OTP VERIFIED -->
+      <div class="rounded-xl border border-emerald-100 bg-emerald-50/30 p-3">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+            <span class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-200 text-[9px] font-bold text-emerald-800">2</span>
+            OTP Verified Contacts
+          </span>
+          <span class="font-extrabold text-emerald-700">{{ formatNumber(m.otpVerifiedCount) }} <span class="text-[10px] font-semibold">({{ m.otpVerifiedRate }}%)</span></span>
+        </div>
+        <div class="h-1.5 w-full rounded-full bg-emerald-100 overflow-hidden">
+          <div class="h-full bg-emerald-500" [style.width.%]="m.otpVerifiedRate"></div>
+        </div>
+        <span class="text-[10px] text-emerald-600 mt-1 block">Authentic phone numbers verified via SMS</span>
+      </div>
+
+      <!-- STAGE 3: UNIQUE PROSPECTS -->
+      <div class="rounded-xl border border-blue-100 bg-blue-50/30 p-3">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-bold text-blue-800 flex items-center gap-1.5">
+            <span class="flex h-4 w-4 items-center justify-center rounded-full bg-blue-200 text-[9px] font-bold text-blue-800">3</span>
+            Deduplicated Prospects
+          </span>
+          <span class="font-extrabold text-blue-700">{{ formatNumber(m.uniqueCount) }} <span class="text-[10px] font-semibold">({{ m.uniqueRate }}%)</span></span>
+        </div>
+        <div class="h-1.5 w-full rounded-full bg-blue-100 overflow-hidden">
+          <div class="h-full bg-blue-600" [style.width.%]="m.uniqueRate"></div>
+        </div>
+        <span class="text-[10px] text-blue-600 mt-1 block">Net actionable parent contacts (0 duplicates)</span>
+      </div>
+
+    </div>
+    }
+  </div>
+
+  <!-- AD CHANNEL ATTRIBUTION (UTM Sources) -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="mb-4">
+      <h3 class="text-sm font-bold text-slate-900">
+        Ad Channels & UTM Sources
+      </h3>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Acquisition source performance & quality
+      </p>
+    </div>
+
+    <div class="space-y-3.5">
+      @for (src of calculationResult?.sourceBreakdown || []; track src.source) {
+      <div>
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-bold text-slate-800 flex items-center gap-1.5">
+            <span class="h-2 w-2 rounded-full" [ngClass]="src.colorClass"></span>
+            {{ src.source }}
+          </span>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-slate-900">{{ src.count }}</span>
+            <span class="text-slate-400 font-semibold">({{ src.percentage }}%)</span>
+          </div>
+        </div>
+        <div class="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div [ngClass]="src.colorClass" [style.width.%]="src.percentage" class="transition-all duration-300"></div>
+        </div>
+        <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Verified: {{ src.verifiedCount }}</span>
+          <span class="font-bold text-emerald-600">{{ src.verifiedRate }}% valid</span>
+        </div>
+      </div>
+      } @empty {
+      <div class="py-6 text-center text-xs text-slate-400">
+        No source attribution data available.
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- CAMPUS & BRANCH QUALITY INFLOW -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="mb-3.5 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900">
+          Campus Inflow Distribution
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Lead concentration across school campuses
+        </p>
+      </div>
+      <span class="rounded-lg bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+        {{ calculationResult?.branchBreakdown?.length ?? 0 }} Campuses
+      </span>
+    </div>
+
+    <div class="space-y-3">
+      @for (b of calculationResult?.branchBreakdown || []; track b.branch) {
+      <div>
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-bold text-slate-800 truncate max-w-[170px]" [title]="b.branch">
+            {{ b.branch }}
+          </span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span class="font-extrabold text-slate-900">{{ b.totalLeads }}</span>
+            <span class="text-slate-400 font-semibold text-[11px]">({{ b.sharePercent }}%)</span>
+          </div>
+        </div>
+        <div class="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div class="bg-indigo-600 transition-all duration-300" [style.width.%]="b.sharePercent"></div>
+        </div>
+        <div class="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+          <span>{{ b.city }}</span>
+          <span class="font-bold text-emerald-600">{{ b.verifiedRate }}% verified</span>
+        </div>
+      </div>
+      } @empty {
+      <div class="py-6 text-center text-xs text-slate-400">
+        No campus breakdown available.
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- RECENT LEADS INFLOW FEED -->
+  <div class="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-bold text-slate-900">
+        Recent Inbound Leads
+      </h3>
+      <button type="button" (click)="onViewAll()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+        View All →
+      </button>
+    </div>
+
+    <div class="space-y-2.5">
+      @for (lead of (calculationResult?.filteredLeads || []).slice(0, 6); track lead.id) {
+      <div class="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 hover:bg-slate-50 transition-colors">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-slate-900 truncate max-w-[130px]">
+            {{ lead.name || 'Anonymous' }}
+          </span>
+          <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold"
+            [class.bg-emerald-50]="lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID'"
+            [class.text-emerald-700]="lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID'"
+            [class.bg-amber-50]="lead.otp_validation !== 'Verified' && lead.otp_validation !== 'VALID'"
+            [class.text-amber-700]="lead.otp_validation !== 'Verified' && lead.otp_validation !== 'VALID'">
+            {{ lead.otp_validation === 'Verified' || lead.otp_validation === 'VALID' ? 'Verified' : 'Pending' }}
+          </span>
+        </div>
+        <div class="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+          <span class="truncate max-w-[150px]">{{ lead.course || lead.class || 'Inquiry' }} • {{ lead.branch || lead.city || 'Campus' }}</span>
+          <span class="text-slate-400 shrink-0">{{ lead.entrydate ? lead.entrydate.split(' ')[1] : '' }}</span>
+        </div>
+      </div>
+      } @empty {
+      <div class="py-6 text-center text-xs text-slate-400">
+        No recent leads matching current filters.
+      </div>
+      }
+    </div>
+  </div>
+
+</div>

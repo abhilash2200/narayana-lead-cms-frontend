@@ -6,6 +6,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
+import { CourseFeatureGroupComponent } from './course-feature-group/course-feature-group.component';
+import { CourseCtaRowComponent } from './course-cta-row/course-cta-row.component';
 
 export interface CourseListItem {
   id: number;
@@ -72,6 +74,8 @@ export interface CourseConfig {
   imports: [
     FormsModule,
     ImageUploadComponent,
+    CourseFeatureGroupComponent,
+    CourseCtaRowComponent,
   ],
   templateUrl: './course.component.html',
   styles: `
