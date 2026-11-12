@@ -24,7 +24,11 @@ import {
   LeadQueryParams,
   LeadService,
 } from '../../services/lead.service';
-import { isTestLead } from './utils/lead-filters.util';
+import {
+  computeDuplicateNameLeadsCount,
+  computeDuplicatePhoneLeadsCount,
+  isTestLead,
+} from './utils/lead-filters.util';
 import {
   BACKEND_SORTABLE_COLUMNS,
   ColumnConfig,
@@ -49,7 +53,7 @@ import {
 import {
   computeDisplayedPages,
   computeSerialNumber,
-  downloadBlobAsFile,
+  executeLeadExport,
   extractCellValue,
 } from './utils/lead-table.util';
 import { LeadDetailDrawerComponent } from './components/lead-detail-drawer/lead-detail-drawer.component';
@@ -110,6 +114,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
   exactName = '';
   exactPhone = '';
   phoneMode: 'all' | 'unique' | 'duplicates_only' = 'all';
+  nameMode: 'all' | 'unique' | 'duplicates_only' = 'all';
   dateFrom = '';
   dateTo = '';
   perPage = 25;
@@ -355,6 +360,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       currentPage: this.currentPage,
       perPage: this.perPage,
       phoneMode: this.phoneMode,
+      nameMode: this.nameMode,
       searchTerm: this.searchTerm,
       excludeSearchTerm: this.excludeSearchTerm,
       exactName: this.exactName,
@@ -391,17 +397,11 @@ export class LeadsComponent implements OnInit, OnDestroy {
   onBackendFilterChange(): void { this.onFilterTrigger(); }
 
   resetBackendFilters(): void {
-    for (const key of Object.keys(this.backendFilters)) {
-      this.backendFilters[key] = '';
-    }
+    Object.keys(this.backendFilters).forEach((k) => (this.backendFilters[k] = ''));
   }
 
   resetAdvancedFilters(): void {
-    for (const key of Object.keys(this.backendFilters)) {
-      if (!this.primaryFilterKeys.has(key)) {
-        this.backendFilters[key] = '';
-      }
-    }
+    Object.keys(this.backendFilters).forEach((k) => { if (!this.primaryFilterKeys.has(k)) this.backendFilters[k] = ''; });
     this.exactName = '';
     this.exactPhone = '';
     this.excludeSearchTerm = '';
@@ -414,6 +414,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
     this.exactName = '';
     this.exactPhone = '';
     this.phoneMode = 'all';
+    this.nameMode = 'all';
     this.dateFrom = '';
     this.dateTo = '';
     this.sortKey = 'id';
@@ -430,6 +431,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       exactName: this.exactName,
       exactPhone: this.exactPhone,
       phoneMode: this.phoneMode,
+      nameMode: this.nameMode,
       dateFrom: this.dateFrom,
       dateTo: this.dateTo,
       activeBackendFilterCount: this.activeBackendFilterCount,
@@ -451,23 +453,25 @@ export class LeadsComponent implements OnInit, OnDestroy {
   }
 
   get duplicateLeadsCount(): number {
-    return this.leads.filter(
-      (l) =>
-        Boolean(l.is_phone_duplicate) ||
-        Boolean(l.phone_duplicate_count && l.phone_duplicate_count > 1) ||
-        Boolean(l.duplicate_count && l.duplicate_count > 1)
-    ).length;
+    return computeDuplicatePhoneLeadsCount(this.leads);
+  }
+
+  get duplicateNamesCount(): number {
+    return computeDuplicateNameLeadsCount(this.leads);
   }
 
   onPhoneModeChange(mode?: 'all' | 'unique' | 'duplicates_only'): void {
-    if (mode) {
-      this.phoneMode = mode;
-    }
+    if (mode) this.phoneMode = mode;
+    this.onFilterTrigger();
+  }
+
+  onNameModeChange(mode?: 'all' | 'unique' | 'duplicates_only'): void {
+    if (mode) this.nameMode = mode;
     this.onFilterTrigger();
   }
 
   inspectDuplicatePhone(phone: string, event?: MouseEvent): void {
-    if (event) event.stopPropagation();
+    event?.stopPropagation();
     if (!phone) return;
     this.exactPhone = phone.trim();
     this.phoneMode = 'all';
@@ -477,6 +481,20 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
   clearExactPhoneFilter(): void {
     this.exactPhone = '';
+    this.onFilterTrigger();
+  }
+
+  inspectDuplicateName(name: string, event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (!name) return;
+    this.exactName = name.trim();
+    this.nameMode = 'all';
+    this.onFilterTrigger();
+    this.toastService.info(`Inspecting all records for name: ${this.exactName}`);
+  }
+
+  clearExactNameFilter(): void {
+    this.exactName = '';
     this.onFilterTrigger();
   }
 
@@ -534,9 +552,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       this.leadService.getLeadById(lead.id, this.selectedModuleKey).subscribe({
         next: (res) => {
           this.isLoadingLeadDetail = false;
-          if (res.success && res.data) {
-            this.selectedLeadForDetail = res.data;
-          }
+          if (res.success && res.data) this.selectedLeadForDetail = res.data;
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -560,24 +576,21 @@ export class LeadsComponent implements OnInit, OnDestroy {
     this.isExporting = true;
     this.cdr.markForCheck();
 
-    const fullParams = this.buildParams();
-    delete fullParams['page'];
-    delete fullParams['per_page'];
-
-    this.leadService.exportLeads(fullParams as LeadQueryParams).subscribe({
-      next: (blob) => {
+    executeLeadExport(
+      this.leadService,
+      this.buildParams(),
+      this.selectedModuleKey,
+      () => {
         this.isExporting = false;
-        const filename = `leads_${this.selectedModuleKey}_${new Date().toISOString().split('T')[0]}.csv`;
-        downloadBlobAsFile(blob, filename);
         this.toastService.success('Lead export downloaded successfully.');
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      (err) => {
         this.isExporting = false;
         this.toastService.error('Failed to export leads.');
         this.cdr.markForCheck();
         console.error('Export error:', err);
-      },
-    });
+      }
+    );
   }
 }

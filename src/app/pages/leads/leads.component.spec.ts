@@ -64,6 +64,7 @@ describe('LeadsComponent', () => {
       expect(params['name']).toBe('Test Parent');
       expect(params['phone']).toBe('9876543210');
       expect(params['phone_mode']).toBe('all');
+      expect(params['name_mode']).toBe('all');
       expect(params['city']).toBe('Kolkata');
       expect(params['board']).toBe('CBSE');
       expect(component.hasActiveFilters).toBe(true);
@@ -365,6 +366,7 @@ describe('LeadsComponent', () => {
       expect(exportedParams.name).toBe('Priya Sharma');
       expect(exportedParams.phone).toBe('9876543210');
       expect(exportedParams.phone_mode).toBe('all');
+      expect(exportedParams.name_mode).toBe('all');
       expect(exportedParams.sort_by).toBe('entrydate');
       expect(exportedParams.sort_order).toBe('desc');
     });
@@ -385,6 +387,22 @@ describe('LeadsComponent', () => {
       expect(exportedParams.phone_mode).toBe('duplicates_only');
       expect(exportedParams.page).toBeUndefined();
       expect(exportedParams.per_page).toBeUndefined();
+    });
+
+    it('should export with custom name_mode', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.nameMode = 'unique';
+
+      let exportedParams: any = null;
+      vi.spyOn(leadService, 'exportLeads').mockImplementation((params) => {
+        exportedParams = params;
+        return of(new Blob(['id,name\n1,Priya'], { type: 'text/csv' }));
+      });
+
+      component.exportCsv();
+
+      expect(exportedParams).toBeTruthy();
+      expect(exportedParams.name_mode).toBe('unique');
     });
   });
 
@@ -424,6 +442,55 @@ describe('LeadsComponent', () => {
       expect(component.exactPhone).toBe('');
       expect(component.currentPage).toBe(1);
       expect(fetchSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Name Mode & Duplicate Inspection', () => {
+    it('should change name mode and refresh leads', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.onNameModeChange('unique');
+
+      expect(component.nameMode).toBe('unique');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(component.hasActiveFilters).toBe(true);
+    });
+
+    it('should inspect duplicate name by setting exactName and resetting nameMode to all', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.nameMode = 'duplicates_only';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.inspectDuplicateName('Animesh Bir');
+
+      expect(component.exactName).toBe('Animesh Bir');
+      expect(component.nameMode).toBe('all');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+    });
+
+    it('should clear exactName filter and refresh leads', () => {
+      component.selectedModuleKey = 'wbnarayanaschools';
+      component.exactName = 'Animesh Bir';
+      const fetchSpy = vi.spyOn(component as any, 'fetchLeads');
+
+      component.clearExactNameFilter();
+
+      expect(component.exactName).toBe('');
+      expect(component.currentPage).toBe(1);
+      expect(fetchSpy).toHaveBeenCalled();
+    });
+
+    it('should compute duplicateNamesCount correctly', () => {
+      component.leads = [
+        { id: 1, name: 'Animesh', phone: '111', is_name_duplicate: true, name_duplicate_count: 2 } as any,
+        { id: 2, name: 'Priya', phone: '222', is_name_duplicate: false, name_duplicate_count: 1 } as any,
+        { id: 3, name: 'Animesh', phone: '333', is_name_duplicate: true, name_duplicate_count: 2 } as any,
+      ];
+
+      expect(component.duplicateNamesCount).toBe(2);
     });
   });
 

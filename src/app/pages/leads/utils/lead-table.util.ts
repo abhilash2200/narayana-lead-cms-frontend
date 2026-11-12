@@ -1,4 +1,5 @@
-import { LeadItem } from '../../../services/lead.service';
+import { Subscription } from 'rxjs';
+import { LeadItem, LeadQueryParams, LeadService } from '../../../services/lead.service';
 
 export function computeDisplayedPages(currentPage: number, totalPages: number): number[] {
   const pages: number[] = [];
@@ -28,4 +29,27 @@ export function downloadBlobAsFile(blob: Blob, filename: string): void {
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+}
+
+export function executeLeadExport(
+  leadService: LeadService,
+  params: LeadQueryParams,
+  moduleKey: string,
+  onSuccess: () => void,
+  onError: (err: unknown) => void
+): Subscription {
+  const exportParams = { ...params };
+  delete exportParams.page;
+  delete exportParams.per_page;
+
+  return leadService.exportLeads(exportParams).subscribe({
+    next: (blob) => {
+      const filename = `leads_${moduleKey}_${new Date().toISOString().split('T')[0]}.csv`;
+      downloadBlobAsFile(blob, filename);
+      onSuccess();
+    },
+    error: (err) => {
+      onError(err);
+    },
+  });
 }

@@ -81,3 +81,27 @@ export function isOtpVerified(lead: LeadItem): boolean {
     otp === '1'
   );
 }
+
+/**
+ * Counts leads with duplicate phone submissions.
+ */
+export function computeDuplicatePhoneLeadsCount(leads: LeadItem[]): number {
+  return leads.filter(
+    (l) =>
+      Boolean(l.is_phone_duplicate) ||
+      Boolean(l.phone_duplicate_count && l.phone_duplicate_count > 1) ||
+      Boolean(l.duplicate_count && l.duplicate_count > 1)
+  ).length;
+}
+
+/**
+ * Counts leads with duplicate name submissions.
+ */
+export function computeDuplicateNameLeadsCount(leads: LeadItem[]): number {
+  return leads.filter(
+    (l) =>
+      Boolean(l.is_name_duplicate) ||
+      Boolean(l.name_duplicate_count && l.name_duplicate_count > 1)
+  ).length;
+}
+

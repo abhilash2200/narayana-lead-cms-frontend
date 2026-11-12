@@ -16,6 +16,7 @@ export class LeadDetailDrawerComponent {
 
   @Output() close = new EventEmitter<void>();
   @Output() inspectPhone = new EventEmitter<string>();
+  @Output() inspectName = new EventEmitter<string>();
 
   onClose(): void {
     this.close.emit();
@@ -23,6 +24,11 @@ export class LeadDetailDrawerComponent {
 
   onInspectPhone(phone: string): void {
     this.inspectPhone.emit(phone);
+    this.onClose();
+  }
+
+  onInspectName(name: string): void {
+    this.inspectName.emit(name);
     this.onClose();
   }
 }

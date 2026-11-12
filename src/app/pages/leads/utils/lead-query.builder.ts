@@ -83,6 +83,7 @@ export function constructLeadQueryParams(options: {
   currentPage: number;
   perPage: number;
   phoneMode: string;
+  nameMode?: string;
   searchTerm?: string;
   excludeSearchTerm?: string;
   exactName?: string;
@@ -98,6 +99,7 @@ export function constructLeadQueryParams(options: {
     page: options.currentPage,
     per_page: options.perPage,
     phone_mode: options.phoneMode,
+    name_mode: options.nameMode || 'all',
   };
 
   if (options.searchTerm?.trim()) params['search'] = options.searchTerm.trim();
@@ -154,6 +156,7 @@ export function computeHasActiveFilters(state: {
   exactName: string;
   exactPhone: string;
   phoneMode: string;
+  nameMode?: string;
   dateFrom: string;
   dateTo: string;
   activeBackendFilterCount: number;
@@ -167,6 +170,7 @@ export function computeHasActiveFilters(state: {
     state.exactName.trim() ||
     state.exactPhone.trim() ||
     state.phoneMode !== 'all' ||
+    (state.nameMode && state.nameMode !== 'all') ||
     state.dateFrom ||
     state.dateTo ||
     state.activeBackendFilterCount > 0 ||
